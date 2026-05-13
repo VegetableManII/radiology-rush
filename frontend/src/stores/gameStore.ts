@@ -22,37 +22,46 @@ const PATIENT_CONFIGS: { type: PatientType; room: RoomType; baseTime: number; re
   { type: 'emergency', room: 'dr', baseTime: 4000, reward: 15 },
 ];
 
-const generateId = () => Math.random().toString(36).substring(2, 9);
+let patientIdCounter = 0;
+let roomIdCounter = 0;
+const generatePatientId = () => `p-${Date.now()}-${patientIdCounter++}`;
+const generateRoomId = () => `r-${Date.now()}-${roomIdCounter++}`;
 
 const generatePatient = (difficulty: number): Patient => {
   const rand = Math.random();
   let type: PatientType;
-  
-  if (rand < 0.5) type = 'xray';
-  else if (rand < 0.8) type = 'ct';
-  else if (rand < 0.95) type = 'mri';
+
+  if (rand < 0.40) type = 'xray';
+  else if (rand < 0.70) type = 'ct';
+  else if (rand < 0.90) type = 'mri';
   else type = 'emergency';
 
   const config = PATIENT_CONFIGS.find(c => c.type === type)!;
   const patienceReduction = Math.min(0.5, difficulty * 0.05);
   const basePatience = 15000 - (difficulty * 1000);
-  
+
+  const name = PATIENT_NAMES[Math.floor(Math.random() * PATIENT_NAMES.length)];
+
+  const fullPatience = basePatience;
+  const patienceSpeed = 0.8 + Math.random() * 0.4;
+
   return {
-    id: generateId(),
+    id: generatePatientId(),
     type,
-    patience: basePatience * (0.8 + Math.random() * 0.4),
-    maxPatience: basePatience * (0.8 + Math.random() * 0.4),
+    patience: fullPatience,
+    maxPatience: fullPatience,
+    patienceSpeed,
     requiredRoom: config.room,
     processTime: config.baseTime * (1 - patienceReduction * 0.3),
     reward: config.reward,
     mood: 100,
-    name: PATIENT_NAMES[Math.floor(Math.random() * PATIENT_NAMES.length)],
+    name,
   };
 };
 
 const createRooms = (): Room[] => {
   return ROOM_CONFIGS.map(cfg => ({
-    id: generateId(),
+    id: generateRoomId(),
     type: cfg.type,
     name: cfg.name,
     isBusy: false,
@@ -68,6 +77,7 @@ const createRooms = (): Room[] => {
 interface GameStore extends GameState {
   phase: GamePhase;
   currentMinigamePatient: Patient | null;
+  currentRoomType: RoomType | null;
   startGame: () => void;
   pauseGame: () => void;
   resumeGame: () => void;
@@ -87,7 +97,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   status: 'idle',
   phase: 'idle',
   score: 0,
-  lives: 5,
+  lives: 10,
   time: 0,
   combo: 0,
   patients: [],
@@ -95,13 +105,14 @@ export const useGameStore = create<GameStore>((set, get) => ({
   selectedPatient: null,
   gameSpeed: 1,
   currentMinigamePatient: null,
+  currentRoomType: null,
 
   startGame: () => {
     set({
       status: 'playing',
       phase: 'playing',
       score: 0,
-      lives: 5,
+      lives: 10,
       time: 0,
       combo: 0,
       patients: [],
@@ -109,6 +120,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       selectedPatient: null,
       gameSpeed: 1,
       currentMinigamePatient: null,
+      currentRoomType: null,
     });
   },
 
@@ -164,6 +176,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       patients: updatedPatients,
       selectedPatient: null,
       currentMinigamePatient: patient,
+      currentRoomType: room.type,
       phase: 'minigame1',
     });
   },
@@ -172,20 +185,37 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set({ currentMinigamePatient: patient, phase: 'minigame1' });
   },
 
-  completeMinigame1: (score) => {
-    const { rooms, currentMinigamePatient } = get();
+  completeMinigame1: (success) => {
+    const { rooms, currentMinigamePatient, score, combo } = get();
     if (!currentMinigamePatient) return;
+
+    const baseReward = currentMinigamePatient.reward;
+    const minigameScore = success ? 1 : 0.5;
+    const finalScore = Math.floor(baseReward * minigameScore);
+    const newCombo = combo + 1;
+    const bonusPatience = Math.floor(currentMinigamePatient.patience / 100);
 
     const updatedRooms = rooms.map(r => {
       if (r.currentPatient?.id === currentMinigamePatient.id) {
-        return { ...r, minigame1Score: score };
+        return {
+          ...r,
+          isBusy: false,
+          currentPatient: null,
+          remainingTime: 0,
+          minigame1Score: 0,
+          minigame2Score: 0,
+        };
       }
       return r;
     });
 
     set({
       rooms: updatedRooms,
-      phase: 'minigame2',
+      currentMinigamePatient: null,
+      currentRoomType: null,
+      phase: 'playing',
+      score: score + finalScore + bonusPatience,
+      combo: newCombo,
     });
   },
 
@@ -242,13 +272,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const newPatient = generatePatient(difficulty);
     
     const isEmergency = newPatient.type === 'emergency';
-    let updatedPatients = [...patients, newPatient];
+    const updatedPatients = isEmergency
+      ? [newPatient, ...patients]
+      : [...patients, newPatient];
     
-    if (isEmergency) {
-      updatedPatients = [newPatient, ...updatedPatients];
-    }
-    
-    if (updatedPatients.length > 10) {
+    if (updatedPatients.length > 20) {
       const { lives, endGame } = get();
       if (lives <= 1) {
         endGame();
@@ -269,7 +297,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     let newLives = lives;
     const updatedPatients = patients.map(patient => ({
       ...patient,
-      patience: Math.max(0, patient.patience - adjustedDelta * 0.5),
+      patience: Math.max(0, patient.patience - adjustedDelta * 0.5 * patient.patienceSpeed),
       mood: Math.max(0, patient.mood - adjustedDelta * 0.01),
     }));
 

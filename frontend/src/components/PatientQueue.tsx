@@ -1,4 +1,3 @@
-import { motion } from 'framer-motion';
 import { useGameStore } from '../stores/gameStore';
 import type { Patient } from '../types/game';
 
@@ -10,11 +9,23 @@ const PATIENT_ICONS: Record<string, string> = {
 };
 
 const PATIENT_COLORS: Record<string, string> = {
-  xray: 'bg-blue-100 border-blue-300',
-  ct: 'bg-purple-100 border-purple-300',
-  mri: 'bg-green-100 border-green-300',
-  emergency: 'bg-red-100 border-red-300 animate-pulse',
+  xray: 'bg-blue-50 border-blue-200',
+  ct: 'bg-purple-50 border-purple-200',
+  mri: 'bg-green-50 border-green-200',
+  emergency: 'bg-red-50 border-red-200',
 };
+
+const PATIENCE_COLORS: Record<string, string> = {
+  high: 'bg-green-400',
+  medium: 'bg-yellow-400',
+  low: 'bg-red-400',
+};
+
+function getPatienceColor(percent: number): string {
+  if (percent > 50) return PATIENCE_COLORS.high;
+  if (percent > 25) return PATIENCE_COLORS.medium;
+  return PATIENCE_COLORS.low;
+}
 
 export function PatientQueue() {
   const { patients, selectedPatient, selectPatient, status } = useGameStore();
@@ -27,70 +38,61 @@ export function PatientQueue() {
   };
 
   return (
-    <div className="relative overflow-hidden rounded-xl shadow-md flex flex-col min-h-0">
-      <img
-        src="/assets/scenes/waiting_room.png"
-        alt=""
-        className="absolute inset-0 w-full h-full object-cover"
-      />
-      <div className="absolute inset-0 bg-white/70 backdrop-blur-sm" />
-      
-      <div className="relative p-3 sm:p-4 flex flex-col min-h-0">
-        <h2 className="text-sm sm:text-lg font-bold text-gray-700 mb-2 sm:mb-3 flex items-center gap-1 sm:gap-2 shrink-0">
+    <div className="h-full rounded-2xl bg-white/30 backdrop-blur-lg shadow-lg ring-1 ring-white/20 flex flex-col overflow-hidden">
+      <div className="shrink-0 px-3 py-2 flex items-center justify-between border-b border-white/20">
+        <h2 className="text-xs sm:text-sm font-bold text-gray-700 flex items-center gap-1">
           <span>📋</span> 候诊区
-          <span className="text-xs sm:text-sm font-normal text-gray-500">({patients.length})</span>
+          <span className="text-[10px] sm:text-xs font-normal text-gray-400">({patients.length}/20)</span>
         </h2>
-        
-        <div className="flex gap-2 sm:gap-3 overflow-x-auto pb-2 flex-1 min-h-0">
-          {patients.length === 0 && (
-            <div className="text-gray-400 text-xs sm:text-sm py-6 sm:py-8 text-center w-full">
-              暂无候诊病人
-            </div>
-          )}
-          
-          {patients.map((patient, index) => {
-            const isSelected = selectedPatient?.id === patient.id;
-            const patiencePercent = (patient.patience / patient.maxPatience) * 100;
-            
-            return (
-              <motion.div
-                key={patient.id}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, scale: 0.8 }}
-                transition={{ delay: index * 0.05 }}
-                onClick={() => handleSelect(patient)}
-                className={`
-                  relative flex-shrink-0 w-20 sm:w-24 p-2 sm:p-3 rounded-lg sm:rounded-xl border cursor-pointer
-                  transition-all select-none
-                  ${PATIENT_COLORS[patient.type]}
-                  ${isSelected ? 'ring-4 ring-yellow-400 scale-105 shadow-xl' : 'hover:scale-102'}
-                  ${patient.type === 'emergency' ? 'ring-2 ring-red-500' : ''}
-                `}
-              >
-                <div className="text-2xl sm:text-3xl mb-0.5 sm:mb-1">{PATIENT_ICONS[patient.type]}</div>
-                <div className="text-[10px] sm:text-xs font-medium text-gray-700 truncate">{patient.name}</div>
-                
-                <div className="mt-1.5 sm:mt-2 bg-gray-200 rounded-full h-1 sm:h-1.5 overflow-hidden">
-                  <motion.div
-                    className={`h-full rounded-full transition-colors ${
-                      patiencePercent > 50 ? 'bg-green-400' :
-                      patiencePercent > 25 ? 'bg-yellow-400' : 'bg-red-400'
-                    }`}
-                    initial={{ width: `${patiencePercent}%` }}
-                    animate={{ width: `${patiencePercent}%` }}
-                  />
-                </div>
-                
-                {patient.type === 'emergency' && (
-                  <div className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] px-1 py-0.5 rounded-full font-bold">
-                    急
+      </div>
+
+      <div className="flex-1 min-h-0 p-2 overflow-y-auto">
+        {patients.length === 0 ? (
+          <div className="h-full flex items-center justify-center text-gray-400 text-xs">
+            暂无候诊病人
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-2">
+            {patients.map((patient) => {
+              const isSelected = selectedPatient?.id === patient.id;
+              const patiencePercent = (patient.patience / patient.maxPatience) * 100;
+
+              return (
+                <div
+                  key={patient.id}
+                  onClick={() => handleSelect(patient)}
+                  className={`
+                    relative flex items-center gap-1.5 px-2 py-1.5 rounded-lg border cursor-pointer
+                    transition-all select-none
+                    ${PATIENT_COLORS[patient.type]}
+                    ${isSelected ? 'ring-2 ring-amber-400 bg-amber-50/80' : 'hover:bg-white/50'}
+                  `}
+                >
+                  <span className="text-xl sm:text-2xl shrink-0">{PATIENT_ICONS[patient.type]}</span>
+
+                  <div className="flex-1 min-w-0 flex flex-col gap-2 px-3 py-1">
+                    <div className="flex items-center justify-between gap-1">
+                      <span className="text-sm sm:text-base font-medium text-gray-700 truncate">{patient.name}</span>
+                      {patient.type === 'emergency' && (
+                        <span className="shrink-0 text-xs sm:text-sm font-bold text-red-500 bg-red-100 px-2 rounded">急</span>
+                      )}
+                    </div>
+                    <div className="bg-gray-200/60 rounded-full h-[6px] sm:h-[8px] overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-colors duration-300 ${getPatienceColor(patiencePercent)}`}
+                        style={{ width: `${patiencePercent}%` }}
+                      />
+                    </div>
                   </div>
-                )}
-              </motion.div>
-            );
-          })}
-        </div>
+
+                  {isSelected && (
+                    <div className="absolute -inset-[2px] rounded-lg border-2 border-amber-400 pointer-events-none" />
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );

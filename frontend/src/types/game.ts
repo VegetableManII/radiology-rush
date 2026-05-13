@@ -7,6 +7,7 @@ export interface Patient {
   type: PatientType;
   patience: number;
   maxPatience: number;
+  patienceSpeed: number;
   requiredRoom: RoomType;
   processTime: number;
   reward: number;

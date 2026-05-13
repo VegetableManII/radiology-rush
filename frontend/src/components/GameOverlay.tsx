@@ -78,7 +78,7 @@ export function GameOverlay() {
             </motion.div>
             
             <h1 className="text-3xl font-bold text-red-600 mb-2">
-              科室崩盘！
+              科室崩盘了
             </h1>
             <p className="text-gray-500 mb-6">
               今天已经尽力了...
