@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 import { useGameStore } from '../stores/gameStore';
+import { playSFX, playBGM, unlockAudio } from '../hooks/useSound';
 
 export function GameOverlay() {
   const { status, score, time, resetGame, startGame } = useGameStore();
@@ -58,7 +59,7 @@ export function GameOverlay() {
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              onClick={() => { /* playSFX('sfx_click'); */ startGame(); }}
+              onClick={() => { unlockAudio(); playBGM(); playSFX('sfx_click'); startGame(); }}
               className="w-full py-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold text-xl rounded-xl shadow-lg"
             >
               开始接诊
@@ -102,7 +103,7 @@ export function GameOverlay() {
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              onClick={() => { /* playSFX('sfx_click'); */ resetGame(); }}
+              onClick={() => { unlockAudio(); playSFX('sfx_click'); resetGame(); }}
               className="w-full py-4 bg-gradient-to-r from-orange-500 to-red-600 text-white font-bold text-xl rounded-xl shadow-lg"
             >
               再来一局

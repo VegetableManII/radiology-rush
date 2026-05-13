@@ -18,7 +18,8 @@
       "Bash(netstat:*)",
       "Bash(tasklist:*)",
       "Bash(taskkill:*)",
-      "Bash(cmd:*)"
+      "Bash(cmd:*)",
+      "Bash(ipconfig:*)"
     ]
   }
 }

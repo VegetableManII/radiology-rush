@@ -1,5 +1,13 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Howl } from 'howler';
+
+// Detect iOS / mobile Safari
+function isIOS(): boolean {
+  return (
+    /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+  );
+}
 
 export type SoundKey =
   | 'bgm'
@@ -42,6 +50,10 @@ function getSound(key: SoundKey): Howl {
       src: [SOUND_URLS[key]],
       loop: key === 'bgm',
       volume: VOLUMES[key] ?? 0.6,
+      // html5: true 避免 iOS Web Audio API 的 autoplay 限制
+      html5: true,
+      // 预加载音频，确保 iOS 上声音就绪
+      preload: true,
     }));
   }
   return soundMap.get(key)!;
@@ -50,6 +62,11 @@ function getSound(key: SoundKey): Howl {
 // Sync playSFX - can be used in non-React context (store, etc)
 export function playSFX(key: SoundKey) {
   getSound(key).play();
+}
+
+// Play BGM directly (must be called inside a user gesture on iOS)
+export function playBGM() {
+  getSound('bgm').play();
 }
 
 // Hook for background music based on game status
@@ -69,4 +86,58 @@ export function useBGM(status: string) {
       bgm.stop();
     };
   }, [status]);
+}
+
+// iOS Safari requires a user gesture to unlock the audio context.
+// We use a silent Howl to "touch unlock" it on first user interaction.
+function touchUnlock() {
+  const unlockSound = new Howl({ src: ['/assets/sfx/sfx_click.mp3'], volume: 0 });
+  unlockSound.play();
+  unlockSound.unload();
+}
+
+const _audioUnlocked = { value: false };
+
+/**
+ * Call this once on first user interaction (e.g. onClick on a start button).
+ * On iOS it pre-plays a silent sound to unlock Web Audio, allowing subsequent
+ * sounds to play without further gesture requirements.
+ */
+export function unlockAudio() {
+  if (_audioUnlocked.value) return;
+  _audioUnlocked.value = true;
+  if (isIOS()) {
+    touchUnlock();
+  }
+  // Also play a click SFX immediately to confirm unlock works
+  playSFX('sfx_click');
+}
+
+/**
+ * React hook that listens for the first touch/click and unlocks audio.
+ * Add this to your root component (e.g. App or Game) once:
+ *   const unlockAudioOnGesture = useUnlockAudioOnGesture();
+ */
+export function useUnlockAudioOnGesture() {
+  const [unlocked, setUnlocked] = useState(_audioUnlocked.value);
+
+  useEffect(() => {
+    if (unlocked) return;
+
+    const handler = () => {
+      unlockAudio();
+      setUnlocked(true);
+    };
+
+    // Listen for the first user gesture on the document
+    document.addEventListener('touchstart', handler, { once: true });
+    document.addEventListener('click', handler, { once: true });
+
+    return () => {
+      document.removeEventListener('touchstart', handler);
+      document.removeEventListener('click', handler);
+    };
+  }, [unlocked]);
+
+  return unlocked;
 }
