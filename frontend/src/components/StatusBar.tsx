@@ -14,11 +14,11 @@ export function StatusBar() {
   if (status === 'idle') return null;
 
   return (
-    <div className="bg-white/90 backdrop-blur-sm shadow-md px-3 py-2 sm:px-4 sm:py-3 flex items-center justify-between gap-2 sm:gap-4 shrink-0">
+    <div className="bg-white/90 backdrop-blur-sm shadow-md px-3 py-2 sm:px-4 sm:py-3 flex items-center justify-between gap-2 sm:gap-4 shrink-0 relative">
       <div className="flex items-center gap-3 sm:gap-6">
         <div className="flex items-center gap-1 sm:gap-2">
           <span className="text-gray-600 text-xs sm:text-sm hidden sm:inline">分数</span>
-          <motion.span 
+          <motion.span
             key={score}
             initial={{ scale: 1.2 }}
             animate={{ scale: 1 }}
@@ -27,10 +27,10 @@ export function StatusBar() {
             {score}
           </motion.span>
         </div>
-        
+
         <div className="flex items-center gap-1 sm:gap-2">
           <span className="text-gray-600 text-xs sm:text-sm hidden sm:inline">连击</span>
-          <motion.span 
+          <motion.span
             animate={{ scale: combo > 0 ? [1, 1.3, 1] : 1 }}
             transition={{ duration: 0.3 }}
             className={`text-base sm:text-xl font-bold ${combo > 5 ? 'text-orange-500' : combo > 0 ? 'text-yellow-500' : 'text-gray-400'}`}
@@ -40,7 +40,7 @@ export function StatusBar() {
         </div>
       </div>
 
-      <div className="text-sm sm:text-lg font-medium text-gray-700 font-mono">
+      <div className="absolute left-1/2 -translate-x-1/2 text-sm sm:text-lg font-medium text-gray-700 font-mono">
         {formatTime(time)}
       </div>
 
@@ -56,6 +56,9 @@ export function StatusBar() {
             ❤️
           </motion.span>
         ))}
+        <span className="text-sm sm:text-base font-bold text-red-500 ml-1">
+          {lives}
+        </span>
       </div>
     </div>
   );

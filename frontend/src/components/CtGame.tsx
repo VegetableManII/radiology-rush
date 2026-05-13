@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { playSFX } from '../hooks/useSound';
 
 const BODY_PARTS = ['brain', 'chest', 'abdomen'] as const;
 type BodyPart = typeof BODY_PARTS[number];
@@ -43,6 +44,15 @@ export function CtGame({ onComplete }: CtGameProps) {
     if (result) return;
     setResult(index === lesionIndex ? 'success' : 'fail');
   }, [result, lesionIndex]);
+
+  // Play sound when result appears
+  useEffect(() => {
+    if (result === 'success') {
+      playSFX('sfx_minigame_success');
+    } else if (result === 'fail') {
+      playSFX('sfx_minigame_fail');
+    }
+  }, [result]);
 
   useEffect(() => {
     if (!result) return;

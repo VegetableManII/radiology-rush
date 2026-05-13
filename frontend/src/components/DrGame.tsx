@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { playSFX } from '../hooks/useSound';
 
 const DR_IMAGES = [
   '/assets/dr_game/bone_1.webp',
@@ -59,6 +60,15 @@ export function DrGame({ onComplete }: DrGameProps) {
       setResult('fail');
     }
   }, [correctZone, result]);
+
+  // Play sound when result appears
+  useEffect(() => {
+    if (result === 'success') {
+      playSFX('sfx_minigame_success');
+    } else if (result === 'fail') {
+      playSFX('sfx_minigame_fail');
+    }
+  }, [result]);
 
   useEffect(() => {
     if (!result) return;

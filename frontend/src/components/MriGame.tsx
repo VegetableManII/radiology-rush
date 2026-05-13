@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { playSFX } from '../hooks/useSound';
 
 type MriType = 'edema' | 'hemorrhage' | 'lipoma';
 
@@ -76,6 +77,15 @@ export function MriGame({ onComplete }: MriGameProps) {
     setSelectedAnswer(answer);
     setResult(answer === currentQuestion?.answer ? 'success' : 'fail');
   }, [result, currentQuestion]);
+
+  // Play sound when result appears
+  useEffect(() => {
+    if (result === 'success') {
+      playSFX('sfx_minigame_success');
+    } else if (result === 'fail') {
+      playSFX('sfx_minigame_fail');
+    }
+  }, [result]);
 
   useEffect(() => {
     if (!result) return;

@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { useGameStore } from '../stores/gameStore';
+import { useBGM } from '../hooks/useSound';
 import { StatusBar } from './StatusBar';
 import { PatientQueue } from './PatientQueue';
 import { RoomList } from './RoomCard';
@@ -8,20 +9,31 @@ import { MessageBar } from './MessageBar';
 import { DrGame } from './DrGame';
 import { CtGame } from './CtGame';
 import { MriGame } from './MriGame';
+import { DoctorNotification } from './DoctorNotification';
+import { ReportList } from './ReportList';
 
 export function Game() {
-  const { status, phase, currentMinigamePatient, currentRoomType, addPatient, updateGame, completeMinigame1 } = useGameStore();
+  const { status, phase, currentMinigamePatient, currentRoomType, addPatient, updateGame, completeMinigame } = useGameStore();
   const lastTimeRef = useRef<number>(0);
+  const statusRef = useRef<string>(status);
+
+  // 保持 ref 同步最新 status
+  useEffect(() => {
+    statusRef.current = status;
+  }, [status]);
+
+  useBGM(status);
 
   useEffect(() => {
     if (status !== 'playing') return;
 
     const patientIntervals = [500, 1000, 1500, 2000];
-    const patientInterval = patientIntervals[Math.floor(Math.random() * patientIntervals.length)];
     let lastPatientTime = 0;
+    let patientInterval = patientIntervals[Math.floor(Math.random() * patientIntervals.length)];
 
     const gameLoop = (currentTime: number) => {
-      if (status !== 'playing') return;
+      // 使用 ref 获取最新 status，避免闭包问题
+      if (statusRef.current !== 'playing') return;
 
       if (lastTimeRef.current === 0) {
         lastTimeRef.current = currentTime;
@@ -36,11 +48,13 @@ export function Game() {
       if (lastPatientTime >= patientInterval) {
         addPatient();
         lastPatientTime = 0;
+        patientInterval = patientIntervals[Math.floor(Math.random() * patientIntervals.length)];
       }
 
       requestAnimationFrame(gameLoop);
     };
 
+    lastTimeRef.current = 0; // 重置时间
     requestAnimationFrame(gameLoop);
 
     return () => {
@@ -49,7 +63,7 @@ export function Game() {
   }, [status, updateGame, addPatient]);
 
   const handleMinigameComplete = (success: boolean) => {
-    completeMinigame1(success ? 1 : 0.5);
+    completeMinigame(success ? 1 : 0.5);
   };
 
   const renderMinigame = () => {
@@ -94,7 +108,11 @@ export function Game() {
 
       <GameOverlay />
 
-      {phase === 'minigame1' && renderMinigame()}
+      <DoctorNotification />
+
+      <ReportList />
+
+      {phase === 'minigame' && renderMinigame()}
     </div>
   );
 }

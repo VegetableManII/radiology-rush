@@ -1,7 +1,8 @@
 import { create } from 'zustand';
-import type { GameState, Patient, PatientType, Room, RoomType } from '../types/game';
+import type { GameState, Patient, PatientType, Room, RoomType, PendingReport } from '../types/game';
+import { playSFX } from '../hooks/useSound';
 
-export type GamePhase = 'idle' | 'playing' | 'minigame1' | 'minigame2' | 'paused' | 'gameover';
+export type GamePhase = 'idle' | 'playing' | 'minigame' | 'paused' | 'gameover';
 
 const PATIENT_NAMES = [
   '张大爷', '李大妈', '王叔叔', '刘阿姨', '陈医生', '周护士',
@@ -27,7 +28,7 @@ let roomIdCounter = 0;
 const generatePatientId = () => `p-${Date.now()}-${patientIdCounter++}`;
 const generateRoomId = () => `r-${Date.now()}-${roomIdCounter++}`;
 
-const generatePatient = (difficulty: number): Patient => {
+const generatePatient = (difficulty: number, reportBonus: number = 0): Patient => {
   const rand = Math.random();
   let type: PatientType;
 
@@ -38,7 +39,9 @@ const generatePatient = (difficulty: number): Patient => {
 
   const config = PATIENT_CONFIGS.find(c => c.type === type)!;
   const patienceReduction = Math.min(0.5, difficulty * 0.05);
-  const basePatience = 15000 - (difficulty * 1000);
+  // 基础耐心 = 15000 - (难度 × 1000) + 报告加成
+  // 每提交一次报告，新病人初始耐心 +500ms
+  const basePatience = Math.max(2000, 15000 - (difficulty * 1000) + (reportBonus * 500));
 
   const name = PATIENT_NAMES[Math.floor(Math.random() * PATIENT_NAMES.length)];
 
@@ -69,8 +72,7 @@ const createRooms = (): Room[] => {
     remainingTime: 0,
     queue: [],
     acceptedTypes: cfg.acceptedTypes,
-    minigame1Score: 0,
-    minigame2Score: 0,
+    minigameScore: 0,
   }));
 };
 
@@ -84,13 +86,15 @@ interface GameStore extends GameState {
   endGame: () => void;
   selectPatient: (patient: Patient | null) => void;
   assignPatientToRoom: (patient: Patient, roomId: string) => void;
-  startMinigame1: (patient: Patient) => void;
-  completeMinigame1: (score: number) => void;
-  completeMinigame2: (correctCount: number, totalCount: number) => void;
+  startMinigame: (patient: Patient) => void;
+  completeMinigame: (score: number) => void;
   skipMinigame: () => void;
   updateGame: (deltaTime: number) => void;
   addPatient: () => void;
   resetGame: () => void;
+  addPendingReport: (patientName: string, roomName: string) => void;
+  toggleReportComplete: (reportId: string) => void;
+  submitReports: () => void;
 }
 
 export const useGameStore = create<GameStore>((set, get) => ({
@@ -106,6 +110,13 @@ export const useGameStore = create<GameStore>((set, get) => ({
   gameSpeed: 1,
   currentMinigamePatient: null,
   currentRoomType: null,
+  pendingReports: [],
+  emergencyCount: 0,
+  emergencyHearts: 0,
+  normalCount: 0,
+  normalHearts: 0,
+  reportCount: 0,
+  reportBonus: 0,
 
   startGame: () => {
     set({
@@ -121,12 +132,17 @@ export const useGameStore = create<GameStore>((set, get) => ({
       gameSpeed: 1,
       currentMinigamePatient: null,
       currentRoomType: null,
+      pendingReports: [],
+      emergencyCount: 0,
+      normalCount: 0,
+      reportCount: 0,
+      reportBonus: 0,
     });
   },
 
   pauseGame: () => {
     const { phase } = get();
-    if (phase === 'playing' || phase === 'minigame1' || phase === 'minigame2') {
+    if (phase === 'playing' || phase === 'minigame') {
       set({ status: 'paused', phase: 'paused' });
     }
   },
@@ -135,11 +151,14 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const { currentMinigamePatient } = get();
     set({ 
       status: 'playing',
-      phase: currentMinigamePatient ? 'minigame1' : 'playing'
+      phase: currentMinigamePatient ? 'minigame' : 'playing'
     });
   },
   
-  endGame: () => set({ status: 'gameover', phase: 'gameover' }),
+  endGame: () => {
+    set({ status: 'gameover', phase: 'gameover' });
+    playSFX('sfx_game_over');
+  },
 
   resetGame: () => {
     const { startGame } = get();
@@ -162,8 +181,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
           isBusy: true,
           currentPatient: patient,
           remainingTime: patient.processTime,
-          minigame1Score: 0,
-          minigame2Score: 0,
+          minigameScore: 0,
         };
       }
       return r;
@@ -177,16 +195,16 @@ export const useGameStore = create<GameStore>((set, get) => ({
       selectedPatient: null,
       currentMinigamePatient: patient,
       currentRoomType: room.type,
-      phase: 'minigame1',
+      phase: 'minigame',
     });
   },
 
-  startMinigame1: (patient) => {
-    set({ currentMinigamePatient: patient, phase: 'minigame1' });
+  startMinigame: (patient) => {
+    set({ currentMinigamePatient: patient, phase: 'minigame' });
   },
 
-  completeMinigame1: (success) => {
-    const { rooms, currentMinigamePatient, score, combo } = get();
+  completeMinigame: (success) => {
+    const { rooms, currentMinigamePatient, score, combo, pendingReports, emergencyCount, emergencyHearts, lives, reportCount, reportBonus, normalCount, normalHearts } = get();
     if (!currentMinigamePatient) return;
 
     const baseReward = currentMinigamePatient.reward;
@@ -202,12 +220,43 @@ export const useGameStore = create<GameStore>((set, get) => ({
           isBusy: false,
           currentPatient: null,
           remainingTime: 0,
-          minigame1Score: 0,
-          minigame2Score: 0,
+          minigameScore: 0,
         };
       }
       return r;
     });
+
+    // Add pending report for the patient (only if successful)
+    const room = rooms.find(r => r.currentPatient?.id === currentMinigamePatient.id);
+    const newPendingReport: PendingReport | null = success === 1 ? {
+      id: `report-${Date.now()}-${Math.random()}`,
+      patientName: currentMinigamePatient.name,
+      roomName: room?.name || '',
+      completed: false,
+    } : null;
+
+    // Emergency count tracking: every 1 emergency = +1 life
+    const isEmergency = currentMinigamePatient.type === 'emergency';
+    const newEmergencyCount = isEmergency ? emergencyCount + 1 : 0;
+    const emergencyHeartsEarned = Math.floor(newEmergencyCount / 1);
+    const remainderEmergency = newEmergencyCount % 1;
+
+    // Normal patient count tracking: every 2 normal patients = +1 life
+    const newNormalCount = success === 1 && !isEmergency ? normalCount + 1 : normalCount;
+    const normalHeartsEarned = Math.floor(newNormalCount / 2);
+    const remainderNormal = newNormalCount % 2;
+
+    // Report count tracking: every 5 reports = +1 reportBonus
+    const reportsAdded = success === 1 ? 1 : 0;
+    const newReportCount = reportCount + reportsAdded;
+    const newReportBonus = reportBonus + Math.floor(newReportCount / 5);
+
+    const totalHeartsEarned = emergencyHeartsEarned + normalHeartsEarned;
+
+    // Sound effects: only play if lives will actually increase
+    if (totalHeartsEarned > 0 && lives < 10) {
+      playSFX('sfx_heart_earn');
+    }
 
     set({
       rooms: updatedRooms,
@@ -216,81 +265,51 @@ export const useGameStore = create<GameStore>((set, get) => ({
       phase: 'playing',
       score: score + finalScore + bonusPatience,
       combo: newCombo,
-    });
-  },
-
-  completeMinigame2: (correctCount, totalCount) => {
-    const { rooms, currentMinigamePatient, score, combo } = get();
-    if (!currentMinigamePatient) return;
-
-    const baseReward = currentMinigamePatient.reward;
-    const room = rooms.find(r => r.currentPatient?.id === currentMinigamePatient.id);
-    const minigame1Score = room?.minigame1Score || 1;
-    const minigame2Score = totalCount > 0 ? correctCount / totalCount : 0.5;
-    
-    const finalScore = Math.floor(baseReward * minigame1Score * (minigame2Score > 0.8 ? 1.5 : minigame2Score > 0.5 ? 1.0 : 0.5));
-    const newCombo = combo + 1;
-    const bonusPatience = Math.floor(currentMinigamePatient.patience / 100);
-
-    const updatedRooms = rooms.map(r => {
-      if (r.currentPatient?.id === currentMinigamePatient.id) {
-        return {
-          ...r,
-          isBusy: false,
-          currentPatient: null,
-          remainingTime: 0,
-          minigame1Score: 0,
-          minigame2Score: 0,
-        };
-      }
-      return r;
-    });
-
-    set({
-      rooms: updatedRooms,
-      currentMinigamePatient: null,
-      phase: 'playing',
-      score: score + finalScore + bonusPatience,
-      combo: newCombo,
+      pendingReports: newPendingReport ? [...pendingReports, newPendingReport] : pendingReports,
+      emergencyCount: remainderEmergency,
+      normalCount: remainderNormal,
+      reportCount: newReportCount % 5,
+      emergencyHearts: emergencyHearts + emergencyHeartsEarned,
+      normalHearts: normalHearts + normalHeartsEarned,
+      reportBonus: newReportBonus,
+      lives: Math.min(lives + totalHeartsEarned, 10),
     });
   },
 
   skipMinigame: () => {
     const { phase } = get();
-    if (phase === 'minigame1') {
-      get().completeMinigame1(0.5);
-    } else if (phase === 'minigame2') {
-      get().completeMinigame2(0, 1);
+    if (phase === 'minigame') {
+      get().completeMinigame(0.5);
     }
   },
 
   addPatient: () => {
-    const { patients, time, phase } = get();
+    const { patients, time, phase, reportBonus } = get();
     if (phase !== 'playing') return;
-    
-    const difficulty = Math.floor(time / 30000);
-    const newPatient = generatePatient(difficulty);
-    
+
+    // 超过20个病人不再生成
+    if (patients.length >= 20) return;
+
+    const difficulty = Math.floor(time / 15000);
+    const newPatient = generatePatient(difficulty, reportBonus);
+
     const isEmergency = newPatient.type === 'emergency';
     const updatedPatients = isEmergency
       ? [newPatient, ...patients]
       : [...patients, newPatient];
-    
-    if (updatedPatients.length > 20) {
-      const { lives, endGame } = get();
-      if (lives <= 1) {
-        endGame();
-        return;
-      }
-      set({ lives: get().lives - 1 });
-    }
-    
+
     set({ patients: updatedPatients });
+
+    if (isEmergency) {
+      playSFX('sfx_emergency_alert');
+    } else {
+      // playSFX('sfx_patient_arrive');
+    }
   },
 
   updateGame: (deltaTime) => {
     const { status, patients, lives, time, phase } = get();
-    if (status !== 'playing' || phase === 'minigame1' || phase === 'minigame2') return;
+    if (status !== 'playing' || phase === 'minigame') return;
 
     const adjustedDelta = deltaTime * get().gameSpeed;
 
@@ -306,9 +325,15 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
     const remainingPatients = updatedPatients.filter(p => p.patience > 0);
 
+    // Play sound before state change
     if (newLives <= 0) {
+      playSFX('sfx_game_over');
       set({ status: 'gameover', phase: 'gameover', lives: 0 });
       return;
+    }
+
+    if (newLives < lives) {
+      playSFX('sfx_life_lost');
     }
 
     set({
@@ -316,5 +341,48 @@ export const useGameStore = create<GameStore>((set, get) => ({
       patients: remainingPatients,
       lives: newLives,
     });
+  },
+
+  addPendingReport: (patientName: string, roomName: string) => {
+    const { pendingReports } = get();
+    const newReport: PendingReport = {
+      id: `report-${Date.now()}-${Math.random()}`,
+      patientName,
+      roomName,
+      completed: false,
+    };
+    set({ pendingReports: [...pendingReports, newReport] });
+  },
+
+  toggleReportComplete: (reportId: string) => {
+    const { pendingReports } = get();
+    set({
+      pendingReports: pendingReports.map(r =>
+        r.id === reportId ? { ...r, completed: !r.completed } : r
+      ),
+    });
+    playSFX('sfx_check');
+  },
+
+  submitReports: () => {
+    const { pendingReports, score, reportCount, reportBonus } = get();
+    const completedCount = pendingReports.filter(r => r.completed).length;
+    const remainingReports = pendingReports.filter(r => !r.completed);
+    const bonusScore = completedCount * 5;
+
+    // Report count tracking: every 5 reports = +1 reportBonus
+    const newReportCount = reportCount + completedCount;
+    const newReportBonus = reportBonus + Math.floor(newReportCount / 5);
+
+    set({
+      pendingReports: remainingReports,
+      score: score + bonusScore,
+      reportCount: newReportCount % 5,
+      reportBonus: newReportBonus,
+    });
+
+    if (completedCount > 0) {
+      playSFX('sfx_report_submit');
+    }
   },
 }));

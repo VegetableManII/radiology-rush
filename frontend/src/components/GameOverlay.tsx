@@ -20,7 +20,7 @@ export function GameOverlay() {
       className="fixed inset-0 flex items-center justify-center z-50 p-4"
     >
       <img
-        src="/assets/scenes/main_bg.png"
+        src="/assets/scenes/main_bg.webp"
         alt=""
         className="absolute inset-0 w-full h-full object-cover"
       />
@@ -51,14 +51,14 @@ export function GameOverlay() {
             <div className="text-left bg-gray-50 rounded-xl p-4 mb-6 text-sm text-gray-600">
               <p className="mb-2">🎯 <strong>目标：</strong>尽可能多地处理病人</p>
               <p className="mb-2">👆 <strong>操作：</strong>点击病人选中，再点击检查室分配</p>
-              <p className="mb-2">🚨 <strong>注意：</strong>急诊病人必须优先处理！</p>
+              <p className="mb-2">🚨 <strong>注意：</strong>急诊病人尽量优先处理！</p>
               <p>❤️ <strong>警告：</strong>病人耐心耗尽会扣除生命值</p>
             </div>
             
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              onClick={startGame}
+              onClick={() => { /* playSFX('sfx_click'); */ startGame(); }}
               className="w-full py-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold text-xl rounded-xl shadow-lg"
             >
               开始接诊
@@ -102,7 +102,7 @@ export function GameOverlay() {
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              onClick={resetGame}
+              onClick={() => { /* playSFX('sfx_click'); */ resetGame(); }}
               className="w-full py-4 bg-gradient-to-r from-orange-500 to-red-600 text-white font-bold text-xl rounded-xl shadow-lg"
             >
               再来一局

@@ -24,8 +24,7 @@ export interface Room {
   remainingTime: number;
   queue: Patient[];
   acceptedTypes: PatientType[];
-  minigame1Score: number;
-  minigame2Score: number;
+  minigameScore: number;
 }
 
 export interface GameState {
@@ -38,4 +37,18 @@ export interface GameState {
   rooms: Room[];
   selectedPatient: Patient | null;
   gameSpeed: number;
+  pendingReports: PendingReport[];
+  emergencyCount: number;   // 急诊余数（不足1颗心的部分）
+  emergencyHearts: number;  // 急诊已兑换爱心数
+  normalCount: number;     // 普通病人余数（不足1颗心的部分）
+  normalHearts: number;    // 普通病人已兑换爱心数
+  reportCount: number;     // 报告余数（不足1份的部分）
+  reportBonus: number;      // 提交报告加成（新病人初始耐心+500ms/份）
+}
+
+export interface PendingReport {
+  id: string;
+  patientName: string;
+  roomName: string;
+  completed: boolean;
 }
