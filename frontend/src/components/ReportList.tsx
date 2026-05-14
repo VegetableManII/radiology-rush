@@ -3,18 +3,14 @@ import { useState, useEffect, useRef } from 'react';
 import { useGameStore } from '../stores/gameStore';
 
 export function ReportList() {
-  const { pendingReports, toggleReportComplete, submitReports, status } = useGameStore();
+  const { pendingReports, toggleReportComplete, submitReports, status, patientLeftAlert, dismissPatientLeftAlert, difficultyAlertShown, dismissDifficultyAlert } = useGameStore();
   const [isOpen, setIsOpen] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
 
-  // 重置为 playing 时关闭面板
   useEffect(() => {
-    if (status === 'playing') {
-      setIsOpen(false);
-    }
+    if (status === 'playing') setIsOpen(false);
   }, [status]);
 
-  // 点击非报告容器区域关闭
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (isOpen && panelRef.current && !panelRef.current.contains(e.target as Node)) {
@@ -24,7 +20,6 @@ export function ReportList() {
         }
       }
     };
-
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isOpen]);
@@ -37,28 +32,51 @@ export function ReportList() {
     setIsOpen(false);
   };
 
+  const handleComputerClick = () => {
+    if (patientLeftAlert) {
+      dismissPatientLeftAlert();
+      if (difficultyAlertShown) dismissDifficultyAlert();
+      return;
+    }
+    setIsOpen(!isOpen);
+  };
+
   if (status !== 'playing') return null;
 
   return (
     <>
-      {/* Report Count Icon Button */}
       <button
         data-report-button
-        onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-4 left-4 z-40 flex items-center"
+        onClick={handleComputerClick}
+        style={{ position: 'fixed', bottom: '1rem', left: '1rem', zIndex: 40, display: 'flex', alignItems: 'center' }}
       >
-        <div className="relative pointer-events-auto">
+        <div style={{ position: 'relative', pointerEvents: 'auto' }}>
           <img
             src="/assets/icons/computer_icon.webp"
             alt="报告"
-            className="w-16 h-16"
+            style={{ width: '4rem', height: '4rem' }}
           />
           {incompleteCount > 0 && (
             <motion.span
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ type: 'spring', stiffness: 500, damping: 15 }}
-              className="absolute -top-1 -right-1 bg-red-500 text-white text-sm font-bold rounded-full min-w-[22px] h-[22px] flex items-center justify-center px-1"
+              style={{
+                position: 'absolute',
+                top: '-0.25rem',
+                right: '-0.25rem',
+                backgroundColor: '#ef4444',
+                color: 'white',
+                fontSize: '0.875rem',
+                fontWeight: 700,
+                borderRadius: '9999px',
+                minWidth: '1.375rem',
+                height: '1.375rem',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '0 0.25rem',
+              }}
             >
               {incompleteCount}
             </motion.span>
@@ -66,7 +84,6 @@ export function ReportList() {
         </div>
       </button>
 
-      {/* Report List Panel */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
@@ -75,43 +92,57 @@ export function ReportList() {
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: -320, opacity: 0 }}
             transition={{ duration: 0.3, ease: 'easeOut' }}
-            className="fixed bottom-4 left-4 z-50 w-80 bg-transparent overflow-hidden"
+            style={{ position: 'fixed', bottom: '1rem', left: '1rem', zIndex: 50, width: '20rem', backgroundColor: 'transparent', overflow: 'hidden' }}
           >
-            {/* Header */}
-            <div className="bg-blue-500 text-white px-4 py-3 flex items-center justify-between rounded-t-2xl">
-              <h3 className="font-bold text-sm">待写报告清单</h3>
+            <div style={{ backgroundColor: '#2563eb', color: 'white', padding: '0.75rem 1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderRadius: '1rem 1rem 0 0' }}>
+              <h3 style={{ fontWeight: 700, fontSize: '0.875rem' }}>待写报告清单</h3>
             </div>
 
-            {/* Report List */}
-            <div className="max-h-80 overflow-y-auto bg-white/95 backdrop-blur-sm">
+            <div style={{ maxHeight: '20rem', overflowY: 'auto', backgroundColor: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(8px)' }}>
               {pendingReports.length === 0 ? (
-                <div className="px-4 py-6 text-center text-gray-400 text-sm">
+                <div style={{ padding: '1.5rem 1rem', textAlign: 'center', color: '#9ca3af', fontSize: '0.875rem' }}>
                   暂无待写报告
                 </div>
               ) : (
-                <ul className="divide-y divide-gray-100">
+                <ul style={{ borderTop: '1px solid #f3f4f6' }}>
                   {pendingReports.map((report) => (
                     <li
                       key={report.id}
-                      className="px-3 py-2.5 flex items-center gap-3 hover:bg-gray-50 transition-colors"
+                      style={{ padding: '0.625rem 0.75rem', display: 'flex', alignItems: 'center', gap: '0.75rem', borderBottom: '1px solid #f9fafb', cursor: 'pointer' }}
+                      onClick={() => { /* click handled by button */ }}
                     >
                       <button
-                        onClick={() => toggleReportComplete(report.id)}
-                        className={`w-6 h-6 rounded-md border-2 flex items-center justify-center transition-colors flex-shrink-0 ${
-                          report.completed
-                            ? 'bg-green-500 border-green-500 text-white'
-                            : 'border-gray-300 hover:border-blue-400'
-                        }`}
+                        onClick={(e) => { e.stopPropagation(); toggleReportComplete(report.id); }}
+                        style={{
+                          width: '1.5rem',
+                          height: '1.5rem',
+                          borderRadius: '0.375rem',
+                          border: '2px solid',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          flexShrink: 0,
+                          cursor: 'pointer',
+                          transition: 'all 0.2s',
+                          ...(report.completed
+                            ? { backgroundColor: '#22c55e', borderColor: '#22c55e', color: 'white' }
+                            : { borderColor: '#d1d5db', backgroundColor: 'transparent' }),
+                        }}
                       >
                         {report.completed && '✓'}
                       </button>
-                      <div className="flex-1 min-w-0">
-                        <p className={`text-sm font-medium truncate ${
-                          report.completed ? 'line-through text-gray-400' : 'text-gray-800'
-                        }`}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <p style={{
+                          fontSize: '0.875rem',
+                          fontWeight: 500,
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                          ...(report.completed ? { textDecoration: 'line-through', color: '#9ca3af' } : { color: '#1f2937' }),
+                        }}>
                           {report.patientName}
                         </p>
-                        <p className="text-xs text-gray-500">{report.roomName}</p>
+                        <p style={{ fontSize: '0.75rem', color: '#6b7280' }}>{report.roomName}</p>
                       </div>
                     </li>
                   ))}
@@ -119,16 +150,23 @@ export function ReportList() {
               )}
             </div>
 
-            {/* Submit Button */}
-            <div className="bg-white/95 backdrop-blur-sm border-t border-gray-200 p-3 rounded-b-2xl">
+            <div style={{ backgroundColor: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(8px)', borderTop: '1px solid #e5e7eb', padding: '0.75rem', borderRadius: '0 0 1rem 1rem' }}>
               <button
                 onClick={handleSubmit}
                 disabled={completedCount === 0}
-                className={`w-full py-2.5 rounded-xl font-bold text-sm transition-colors ${
-                  completedCount > 0
-                    ? 'bg-green-500 hover:bg-green-600 text-white'
-                    : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                }`}
+                style={{
+                  width: '100%',
+                  padding: '0.625rem',
+                  borderRadius: '0.75rem',
+                  fontWeight: 700,
+                  fontSize: '0.875rem',
+                  border: 'none',
+                  cursor: completedCount > 0 ? 'pointer' : 'not-allowed',
+                  transition: 'all 0.2s',
+                  ...(completedCount > 0
+                    ? { background: 'linear-gradient(to right, #22c55e, #16a34a)', color: 'white', boxShadow: '0 4px 6px -1px rgba(34,197,94,0.3)' }
+                    : { backgroundColor: '#e5e7eb', color: '#9ca3af' }),
+                }}
               >
                 提交已完成报告 ({completedCount})
               </button>
@@ -136,6 +174,32 @@ export function ReportList() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {patientLeftAlert && (
+        <div
+          onClick={dismissPatientLeftAlert}
+          style={{
+            position: 'fixed',
+            bottom: '2rem',
+            left: '1rem',
+            zIndex: 42,
+            backgroundColor: '#fef3c7',
+            border: '2px solid #f59e0b',
+            borderRadius: '0.75rem',
+            padding: '0.375rem 0.625rem',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.15), 0 2px 8px rgba(0,0,0,0.1)',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'flex-start',
+          }}
+        >
+          <div>
+            <p style={{ color: '#92400e', fontWeight: 700, fontSize: '0.75rem', lineHeight: 1.4 }}>
+              一次性提交至少5份报告<br />可获得15秒冻结效果
+            </p>
+          </div>
+        </div>
+      )}
     </>
   );
 }

@@ -22,12 +22,6 @@ const MriTypeNames: Record<MriType, string> = {
   lipoma: '脂肪瘤',
 };
 
-const HINT_TABLE: { t1: 'bright' | 'dark'; t2: 'bright' | 'dark'; label: string; answer: MriType }[] = [
-  { t1: 'bright', t2: 'bright', label: '出血', answer: 'hemorrhage' },
-  { t1: 'dark', t2: 'bright', label: '水肿', answer: 'edema' },
-  { t1: 'bright', t2: 'dark', label: '脂肪瘤', answer: 'lipoma' },
-];
-
 interface MriGameProps {
   onComplete: (success: boolean) => void;
 }
@@ -58,17 +52,12 @@ export function MriGame({ onComplete }: MriGameProps) {
 
   useEffect(() => {
     if (result || isLoading) return;
-
     const timer = setInterval(() => {
       setTimeLeft(prev => {
-        if (prev <= 1) {
-          setResult('fail');
-          return 0;
-        }
+        if (prev <= 1) { setResult('fail'); return 0; }
         return prev - 1;
       });
     }, 1000);
-
     return () => clearInterval(timer);
   }, [result, isLoading]);
 
@@ -78,99 +67,102 @@ export function MriGame({ onComplete }: MriGameProps) {
     setResult(answer === currentQuestion?.answer ? 'success' : 'fail');
   }, [result, currentQuestion]);
 
-  // Play sound when result appears
   useEffect(() => {
-    if (result === 'success') {
-      playSFX('sfx_minigame_success');
-    } else if (result === 'fail') {
-      playSFX('sfx_minigame_fail');
-    }
+    if (result === 'success') playSFX('sfx_minigame_success');
+    else if (result === 'fail') playSFX('sfx_minigame_fail');
   }, [result]);
 
   useEffect(() => {
     if (!result) return;
-
-    const timer = setTimeout(() => {
-      onComplete(result === 'success');
-    }, 1000);
-    return () => clearTimeout(timer);
+    setTimeout(() => { onComplete(result === 'success'); }, 1000);
   }, [result, onComplete]);
 
   if (isLoading || !currentQuestion) {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
-        <div className="text-white">加载中...</div>
+      <div style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)' }}>
+        <span style={{ color: 'white' }}>加载中...</span>
       </div>
     );
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
-      <div className="relative bg-white rounded-2xl shadow-2xl p-4 max-w-md w-full mx-4">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-lg font-bold text-gray-800">🧲 MRI室 - 判断病变类型</h2>
-          <div className={`px-3 py-1 rounded-full text-sm font-bold ${
-            timeLeft <= 3 ? 'bg-red-100 text-red-600' : 'bg-blue-100 text-blue-600'
-          }`}>
-            ⏱️ {timeLeft}s
+    <div style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)' }}>
+      <div style={{ position: 'relative', backgroundColor: 'white', borderRadius: '1rem', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.4)', padding: '1rem', maxWidth: 'min(28rem, 100%)', width: '100%', margin: '0 1rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
+          <h2 style={{ fontSize: 'clamp(1rem, 3vw, 1.125rem)', fontWeight: 700, color: '#1f2937', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <img src="/assets/icons/icon_mri.webp" alt="" style={{ width: 'clamp(1.25rem, 4vw, 1.5rem)', height: 'clamp(1.25rem, 4vw, 1.5rem)' }} />
+            MRI室 - 判断病变类型
+          </h2>
+          <div style={{
+            padding: '0.25rem 0.75rem',
+            borderRadius: '9999px',
+            fontSize: '0.875rem',
+            fontWeight: 700,
+            backgroundColor: timeLeft <= 3 ? '#fef2f2' : '#eff6ff',
+            color: timeLeft <= 3 ? '#dc2626' : '#2563eb',
+          }}>
+            <span style={{ fontSize: 'clamp(0.875rem, 3vw, 1rem)', marginRight: '0.25rem' }}>⏱️</span> {timeLeft}s
           </div>
         </div>
 
-        {/* T1/T2 Scan Results - Display Only */}
-        <div className="bg-gray-100 rounded-xl p-3 mb-3">
-          <div className="flex items-center justify-between">
-            <span className="text-xs text-gray-500 font-medium">已扫描</span>
-            <div className="flex gap-6">
-              <div className="flex flex-col items-center gap-1">
-                <span className="text-xs font-bold text-gray-500">T1</span>
-                <div className={`
-                  w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm
-                  ${currentQuestion.t1 === 'bright'
-                    ? 'bg-green-500 shadow-lg shadow-green-500/50'
-                    : 'bg-gray-700 shadow-inner'
-                  }
-                `}>
-                  {currentQuestion.t1 === 'bright' ? '亮' : '暗'}
+        {/*
+          已扫描区域：上方显示T1/T2信号灯，下方显示3种组合对照
+        */}
+        <div style={{ backgroundColor: '#f3f4f6', borderRadius: '0.75rem', padding: '0.75rem', marginBottom: '0.75rem' }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem' }}>
+            <span style={{ fontSize: 'clamp(0.625rem, 2vw, 0.75rem)', color: '#6b7280', fontWeight: 500, flexShrink: 0, paddingTop: '0.125rem' }}>已扫描</span>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', flex: 1 }}>
+              {/* 竖排提示：信号灯 + 病名 */}
+              {[
+                { t1: 'bright', t2: 'bright', label: '出血' },
+                { t1: 'dark', t2: 'bright', label: '水肿' },
+                { t1: 'bright', t2: 'dark', label: '脂肪瘤' },
+              ].map((item, idx) => (
+                <div key={idx} style={{
+                  display: 'flex', alignItems: 'center', gap: '0.375rem',
+                }}>
+                  <div style={{ display: 'flex', gap: '3px' }}>
+                    <div style={{
+                      width: 'clamp(0.5rem, 1.5vw, 0.625rem)', height: 'clamp(0.5rem, 1.5vw, 0.625rem)', borderRadius: '50%',
+                      backgroundColor: item.t1 === 'bright' ? '#22c55e' : '#4b5567',
+                    }} />
+                    <div style={{
+                      width: 'clamp(0.5rem, 1.5vw, 0.625rem)', height: 'clamp(0.5rem, 1.5vw, 0.625rem)', borderRadius: '50%',
+                      backgroundColor: item.t2 === 'bright' ? '#22c55e' : '#4b5567',
+                    }} />
+                  </div>
+                  <span style={{ fontSize: 'clamp(0.5rem, 2vw, 0.625rem)', color: '#4b5563' }}>{item.label}</span>
                 </div>
-              </div>
-              <div className="flex flex-col items-center gap-1">
-                <span className="text-xs font-bold text-gray-500">T2</span>
-                <div className={`
-                  w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm
-                  ${currentQuestion.t2 === 'bright'
-                    ? 'bg-green-500 shadow-lg shadow-green-500/50'
-                    : 'bg-gray-700 shadow-inner'
-                  }
-                `}>
-                  {currentQuestion.t2 === 'bright' ? '亮' : '暗'}
-                </div>
-              </div>
+              ))}
+            </div>
+            {/* T1 / T2 亮灯 */}
+            <div style={{ display: 'flex', gap: '1rem', flexShrink: 0 }}>
+              {(['t1', 't2'] as const).map((scan) => {
+                const val = scan === 't1' ? currentQuestion.t1 : currentQuestion.t2;
+                return (
+                  <div key={scan} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.125rem' }}>
+                    <span style={{ fontSize: 'clamp(0.5rem, 1.5vw, 0.625rem)', fontWeight: 700, color: '#6b7280' }}>{scan.toUpperCase()}</span>
+                    <div style={{
+                      width: '2rem', height: '2rem', borderRadius: '50%',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      color: 'white', fontWeight: 700, fontSize: 'clamp(0.625rem, 2vw, 0.75rem)',
+                      ...(val === 'bright'
+                        ? { backgroundColor: '#22c55e', boxShadow: '0 0 10px rgba(34,197,94,0.5)' }
+                        : { backgroundColor: '#4b5567', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.3)' }),
+                    }}>
+                      {val === 'bright' ? '亮' : '暗'}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>
 
-        {/* Hint Table - 3 Row Grid */}
-        <div className="grid grid-cols-3 gap-1 mb-3 text-[10px]">
-          {HINT_TABLE.map((item, idx) => (
-            <div key={idx} className="flex items-center justify-center gap-1 bg-gray-50 rounded px-1 py-1">
-              <div className="flex gap-0.5">
-                <div className={`
-                  w-3 h-3 rounded-full
-                  ${item.t1 === 'bright' ? 'bg-green-500' : 'bg-gray-700'}
-                `} />
-                <div className={`
-                  w-3 h-3 rounded-full
-                  ${item.t2 === 'bright' ? 'bg-green-500' : 'bg-gray-700'}
-                `} />
-              </div>
-              <span className="text-gray-600">{item.label}</span>
-            </div>
-          ))}
-        </div>
-
-        {/* Answer Buttons with Images - Shuffled Order */}
-        <div className="grid grid-cols-3 gap-2 mb-4">
+        {/*
+          病状选择按钮：图片 + 病状名称
+        */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem', marginBottom: '1rem' }}>
           {shuffledTypes.map((type) => {
             const isCorrect = type === currentQuestion.answer;
             const isSelected = selectedAnswer === type;
@@ -180,39 +172,51 @@ export function MriGame({ onComplete }: MriGameProps) {
                 key={type}
                 onClick={() => handleAnswerClick(type)}
                 disabled={result !== null}
-                className={`
-                  relative aspect-square rounded-xl overflow-hidden transition-all
-                  ${result === null ? 'hover:scale-105' : ''}
-                  ${result === 'success' && isCorrect ? 'ring-4 ring-green-500' : ''}
-                  ${result === 'fail' && isCorrect ? 'ring-4 ring-green-500' : ''}
-                  ${result === 'fail' && isSelected && !isCorrect ? 'ring-4 ring-red-500' : ''}
-                  ${result === 'fail' && !isCorrect && !isSelected ? 'opacity-50' : ''}
-                `}
+                style={{
+                  position: 'relative',
+                  borderRadius: '0.75rem',
+                  overflow: 'hidden',
+                  transition: 'all',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  ...(result === null ? { cursor: 'pointer' } : { cursor: 'default' }),
+                  ...(result !== null ? { transform: 'scale(1.03)' } : {}),
+                  ...(result === 'success' && isCorrect ? { outline: '4px solid #22c55e', outlineOffset: '-2px' } : {}),
+                  ...(result === 'fail' && isCorrect ? { outline: '4px solid #22c55e', outlineOffset: '-2px' } : {}),
+                  ...(result === 'fail' && isSelected && !isCorrect ? { outline: '4px solid #ef4444', outlineOffset: '-2px' } : {}),
+                  ...(result === 'fail' && !isCorrect && !isSelected ? { opacity: 0.5 } : {}),
+                }}
               >
                 <img
                   src={QUESTIONS.find(q => q.answer === type)?.image}
-                  alt="MRI scan"
-                  className="w-full h-full object-cover"
+                  alt={MriTypeNames[type]}
+                  style={{ width: '100%', aspectRatio: '1', objectFit: 'cover' }}
                 />
+                <div style={{
+                  width: '100%',
+                  padding: '0.25rem',
+                  textAlign: 'center',
+                  fontSize: 'clamp(0.625rem, 2vw, 0.75rem)',
+                  fontWeight: 700,
+                  color: 'white',
+                  backgroundColor: '#374151',
+                }}>
+                  {MriTypeNames[type]}
+                </div>
               </button>
             );
           })}
         </div>
 
-        {/* Result overlay */}
         {result && (
-          <div className={`
-            absolute inset-0 flex flex-col items-center justify-center rounded-2xl
-            ${result === 'success' ? 'bg-green-500/80' : 'bg-red-500/80'}
-          `}>
-            <div className="text-center text-white">
-              <div className="text-5xl mb-2">{result === 'success' ? '✓' : '✗'}</div>
-              <div className="text-xl font-bold">
-                {result === 'success' ? '正确！' : '错误'}
-              </div>
-              <div className="text-sm opacity-90 mt-1">
-                {MriTypeNames[currentQuestion.answer]}
-              </div>
+          <div style={{
+            position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', borderRadius: '1rem',
+            backgroundColor: result === 'success' ? 'rgba(34,197,94,0.8)' : 'rgba(239,68,68,0.8)',
+          }}>
+            <div style={{ textAlign: 'center', color: 'white' }}>
+              <div style={{ fontSize: 'clamp(2.5rem, 8vw, 3rem)', marginBottom: '0.5rem', fontWeight: 700 }}>{result === 'success' ? '✓' : '✗'}</div>
+              <div style={{ fontSize: 'clamp(1rem, 3vw, 1.25rem)', fontWeight: 700 }}>{result === 'success' ? '正确！' : '错误'}</div>
+              <div style={{ fontSize: 'clamp(0.75rem, 2.5vw, 0.875rem)', opacity: 0.9, marginTop: '0.25rem' }}>{MriTypeNames[currentQuestion.answer]}</div>
             </div>
           </div>
         )}

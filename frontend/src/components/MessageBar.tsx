@@ -12,8 +12,8 @@ const MESSAGES = [
   '稳住，我们能赢！',
   '注意！有急诊！',
   '呼～今天也是忙碌的一天呢',
-  '💡 及时清理报告可增加健康值哦',
-  '💡 优先处理急诊病人可以获得❤哦',
+  '💡 及时清理报告可延长病人的等待时间哦',
+  '优先处理急诊病人可以获得生命值哦',
 ];
 
 export function MessageBar() {
@@ -23,10 +23,10 @@ export function MessageBar() {
 
   useEffect(() => {
     if (status !== 'playing') return;
-    
+
     const interval = setInterval(() => {
       if (emergencyCount > 0) {
-        setMessage('🚨 警告！有急诊病人需要处理！');
+        setMessage('🚨 有急诊病人需要处理！');
       } else {
         const randomMessage = MESSAGES[Math.floor(Math.random() * MESSAGES.length)];
         setMessage(randomMessage);
@@ -45,7 +45,17 @@ export function MessageBar() {
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -10 }}
-        className="bg-white/80 backdrop-blur-sm rounded-lg px-3 py-1.5 sm:px-4 sm:py-2 shadow text-center text-gray-700 text-xs sm:text-sm shrink-0"
+        style={{
+          backgroundColor: 'rgba(255,255,255,0.8)',
+          backdropFilter: 'blur(8px)',
+          borderRadius: '0.5rem',
+          padding: 'clamp(0.375rem, 1.5vw, 0.625rem) clamp(0.75rem, 3vw, 1rem)',
+          boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)',
+          textAlign: 'center',
+          color: '#374151',
+          fontSize: 'clamp(0.625rem, 2.5vw, 0.875rem)',
+          flexShrink: 0,
+        }}
       >
         {message}
       </motion.div>

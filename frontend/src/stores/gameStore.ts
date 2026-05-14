@@ -28,7 +28,7 @@ let roomIdCounter = 0;
 const generatePatientId = () => `p-${Date.now()}-${patientIdCounter++}`;
 const generateRoomId = () => `r-${Date.now()}-${roomIdCounter++}`;
 
-const generatePatient = (difficulty: number, reportBonus: number = 0): Patient => {
+const generatePatient = (difficulty: number): Patient => {
   const rand = Math.random();
   let type: PatientType;
 
@@ -39,9 +39,8 @@ const generatePatient = (difficulty: number, reportBonus: number = 0): Patient =
 
   const config = PATIENT_CONFIGS.find(c => c.type === type)!;
   const patienceReduction = Math.min(0.5, difficulty * 0.05);
-  // 基础耐心 = 15000 - (难度 × 1000) + 报告加成
-  // 每提交一次报告，新病人初始耐心 +500ms
-  const basePatience = Math.max(2000, 15000 - (difficulty * 1000) + (reportBonus * 500));
+  // 基础耐心 = 15000 - (难度 × 500)
+  const basePatience = Math.max(2000, 15000 - (difficulty * 500));
 
   const name = PATIENT_NAMES[Math.floor(Math.random() * PATIENT_NAMES.length)];
 
@@ -95,6 +94,8 @@ interface GameStore extends GameState {
   addPendingReport: (patientName: string, roomName: string) => void;
   toggleReportComplete: (reportId: string) => void;
   submitReports: () => void;
+  dismissPatientLeftAlert: () => void;
+  dismissDifficultyAlert: () => void;
 }
 
 export const useGameStore = create<GameStore>((set, get) => ({
@@ -115,10 +116,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
   emergencyHearts: 0,
   normalCount: 0,
   normalHearts: 0,
-  reportCount: 0,
-  reportBonus: 0,
-  bulletTimeEnd: 0,
-  bulletTimeTriggered: false,
+  patientLeftAlert: false,
+  difficulty: 0,
+  difficultyAlertShown: false,
+  freezeSeconds: 0,
 
   startGame: () => {
     set({
@@ -137,10 +138,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
       pendingReports: [],
       emergencyCount: 0,
       normalCount: 0,
-      reportCount: 0,
-      reportBonus: 0,
-      bulletTimeEnd: 0,
-      bulletTimeTriggered: false,
+      patientLeftAlert: false,
+      difficulty: 0,
+      difficultyAlertShown: false,
+      freezeSeconds: 0,
     });
   },
 
@@ -208,7 +209,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
 
   completeMinigame: (success) => {
-    const { rooms, currentMinigamePatient, score, combo, pendingReports, emergencyCount, emergencyHearts, lives, reportCount, reportBonus, normalCount, normalHearts } = get();
+    const { rooms, currentMinigamePatient, score, combo, pendingReports, emergencyCount, emergencyHearts, lives, normalCount, normalHearts } = get();
     if (!currentMinigamePatient) return;
 
     const baseReward = currentMinigamePatient.reward;
@@ -250,15 +251,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const normalHeartsEarned = Math.floor(newNormalCount / 2);
     const remainderNormal = newNormalCount % 2;
 
-    // Report count tracking: every 5 reports = +1 reportBonus
-    const reportsAdded = success === 1 ? 1 : 0;
-    // 从 reportBonus 和 reportCount 反推实际总数
-    const oldTotal = reportBonus * 5 + reportCount;
-    const newTotal = oldTotal + reportsAdded;
-    const oldBonus = Math.floor(oldTotal / 5);
-    const newBonus = Math.floor(newTotal / 5);
-    const newReportBonus = reportBonus + (newBonus - oldBonus);
-
     const totalHeartsEarned = emergencyHeartsEarned + normalHeartsEarned;
 
     // Sound effects: only play if lives will actually increase
@@ -276,10 +268,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
       pendingReports: newPendingReport ? [...pendingReports, newPendingReport] : pendingReports,
       emergencyCount: remainderEmergency,
       normalCount: remainderNormal,
-      reportCount: newTotal % 5,
       emergencyHearts: emergencyHearts + emergencyHeartsEarned,
       normalHearts: normalHearts + normalHeartsEarned,
-      reportBonus: newReportBonus,
       lives: Math.min(lives + totalHeartsEarned, 10),
     });
   },
@@ -292,14 +282,14 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
 
   addPatient: () => {
-    const { patients, time, phase, reportBonus } = get();
+    const { patients, time, phase } = get();
     if (phase !== 'playing') return;
 
     // 超过20个病人不再生成
     if (patients.length >= 20) return;
 
-    const difficulty = Math.floor(time / 15000);
-    const newPatient = generatePatient(difficulty, reportBonus);
+    const difficulty = Math.floor(time / 30000);
+    const newPatient = generatePatient(difficulty);
 
     const isEmergency = newPatient.type === 'emergency';
     const updatedPatients = isEmergency
@@ -316,20 +306,18 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
 
   updateGame: (deltaTime) => {
-    const { status, patients, lives, time, phase, bulletTimeEnd, reportBonus } = get();
-    if (status !== 'playing' || phase === 'minigame') return;
+    const { status, patients, lives, time, freezeSeconds, difficultyAlertShown } = get();
+    if (status !== 'playing') return;
 
     const adjustedDelta = deltaTime * get().gameSpeed;
 
-    // 计算当前难度，每15秒+1难度
-    const difficulty = Math.floor(time / 15000);
+    // 计算当前难度，每30秒+1难度
+    const difficulty = Math.floor(time / 30000);
 
-    // 子弹时间：根据 reportBonus 调整消耗速度倍率
-    // reportBonus = 0 时消耗 1.0x，reportBonus = 1 时消耗 0.8x...
-    // bulletTimeEnd > time 时为子弹时间
-    const isBulletTime = bulletTimeEnd > time;
-    const bulletTimeMultiplier = isBulletTime ? Math.max(0.2, 1 - reportBonus * 0.2) : 1;
-    const difficultyMultiplier = (1 + difficulty * 0.1) * bulletTimeMultiplier;
+    // 冻结：剩余秒数 > 0 时激活，freezeSeconds 独立倒计
+    const isFreeze = freezeSeconds > 0;
+    const freezeMultiplier = isFreeze ? 0.2 : 1;
+    const difficultyMultiplier = (1 + difficulty * 0.1) * freezeMultiplier;
 
     let newLives = lives;
     const updatedPatients = patients.map(patient => ({
@@ -349,14 +337,16 @@ export const useGameStore = create<GameStore>((set, get) => ({
       return;
     }
 
-    if (newLives < lives) {
-      playSFX('sfx_heart_lost');
-    }
+    const newFreezeSeconds = isFreeze ? Math.max(0, freezeSeconds - adjustedDelta / 1000) : freezeSeconds;
 
     set({
       time: time + adjustedDelta,
       patients: remainingPatients,
       lives: newLives,
+      difficulty,
+      freezeSeconds: newFreezeSeconds,
+      // 第一次难度升级时触发气泡
+      ...(difficulty > 0 && !difficultyAlertShown ? { patientLeftAlert: true, difficultyAlertShown: true } : {}),
     });
   },
 
@@ -382,38 +372,33 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
 
   submitReports: () => {
-    const { pendingReports, score, reportCount, reportBonus, time } = get();
+    const { pendingReports, score } = get();
     const completedCount = pendingReports.filter(r => r.completed).length;
     const remainingReports = pendingReports.filter(r => !r.completed);
     const bonusScore = completedCount * 5;
 
-    // Report count tracking: every 5 reports = +1 reportBonus
-    // 从 reportBonus 和 reportCount 反推实际总数
-    const oldTotal = reportBonus * 5 + reportCount;
-    const newTotal = oldTotal + completedCount;
-    const oldBonus = Math.floor(oldTotal / 5);
-    const newBonus = Math.floor(newTotal / 5);
-    const newReportBonus = reportBonus + (newBonus - oldBonus);
-
-    // 如果 reportBonus 增加，触发子弹时间 15秒
-    let newBulletTimeEnd = get().bulletTimeEnd;
-    let bulletTimeTriggered = false;
-    if (newReportBonus > reportBonus) {
-      newBulletTimeEnd = time + 15000;
-      bulletTimeTriggered = true;
+    // 一次性提交满5份触发冻结，每多5份额外+15秒
+    let addFreezeSeconds = 0;
+    if (completedCount >= 5) {
+      addFreezeSeconds = Math.floor(completedCount / 5) * 15;
     }
 
     set({
       pendingReports: remainingReports,
       score: score + bonusScore,
-      reportCount: newTotal % 5,
-      reportBonus: newReportBonus,
-      bulletTimeEnd: newBulletTimeEnd,
-      bulletTimeTriggered,
+      freezeSeconds: get().freezeSeconds + addFreezeSeconds,
     });
 
     if (completedCount > 0) {
       playSFX('sfx_report_submit');
     }
+  },
+
+  dismissPatientLeftAlert: () => {
+    set({ patientLeftAlert: false });
+  },
+
+  dismissDifficultyAlert: () => {
+    set({ difficultyAlertShown: false });
   },
 }));

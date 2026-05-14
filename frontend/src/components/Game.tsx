@@ -17,11 +17,15 @@ export function Game() {
   const { status, phase, currentMinigamePatient, currentRoomType, addPatient, updateGame, completeMinigame } = useGameStore();
   const lastTimeRef = useRef<number>(0);
   const statusRef = useRef<string>(status);
+  const phaseRef = useRef<string>(phase);
 
-  // 保持 ref 同步最新 status
   useEffect(() => {
     statusRef.current = status;
   }, [status]);
+
+  useEffect(() => {
+    phaseRef.current = phase;
+  }, [phase]);
 
   useBGM(status);
 
@@ -33,7 +37,6 @@ export function Game() {
     let patientInterval = patientIntervals[Math.floor(Math.random() * patientIntervals.length)];
 
     const gameLoop = (currentTime: number) => {
-      // 使用 ref 获取最新 status，避免闭包问题
       if (statusRef.current !== 'playing') return;
 
       if (lastTimeRef.current === 0) {
@@ -43,8 +46,6 @@ export function Game() {
       const deltaTime = currentTime - lastTimeRef.current;
       lastTimeRef.current = currentTime;
 
-      updateGame(deltaTime);
-
       lastPatientTime += deltaTime;
       if (lastPatientTime >= patientInterval) {
         addPatient();
@@ -52,16 +53,18 @@ export function Game() {
         patientInterval = patientIntervals[Math.floor(Math.random() * patientIntervals.length)];
       }
 
+      updateGame(deltaTime);
+
       requestAnimationFrame(gameLoop);
     };
 
-    lastTimeRef.current = 0; // 重置时间
+    lastTimeRef.current = 0;
     requestAnimationFrame(gameLoop);
 
     return () => {
       lastTimeRef.current = 0;
     };
-  }, [status, updateGame, addPatient]);
+  }, [status, currentMinigamePatient, updateGame, addPatient]);
 
   const handleMinigameComplete = (success: boolean) => {
     completeMinigame(success ? 1 : 0.5);
@@ -83,36 +86,33 @@ export function Game() {
   };
 
   return (
-    <div className="w-full h-screen flex flex-col relative overflow-hidden">
+    <div style={{ width: '100%', height: '100dvh', display: 'flex', flexDirection: 'column', position: 'relative', overflow: 'hidden' }}>
       <img
         src="/assets/scenes/main_bg.webp"
         alt=""
-        className="absolute inset-0 w-full h-full object-cover -z-10"
+        style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: -10 }}
       />
-      <div className="absolute inset-0 bg-black/20 -z-10" />
+      <div style={{ position: 'absolute', inset: 0, backgroundColor: 'rgba(0,0,0,0.2)', zIndex: -10 }} />
 
       <StatusBar />
 
-      <main className="flex-1 min-h-0 p-3 sm:p-4 flex flex-col gap-2 sm:gap-3 overflow-hidden">
-        <div className="shrink-0 h-[22vh]">
+      <main style={{ flex: 1, minHeight: 0, padding: 'clamp(0.75rem, 2vw, 1rem)', display: 'flex', flexDirection: 'column', gap: 'clamp(0.5rem, 2vw, 0.75rem)', overflow: 'hidden' }}>
+        <div style={{ flexShrink: 0, height: 'clamp(5rem, 20vh, 10rem)' }}>
           <RoomList />
         </div>
 
-        <div className="flex-1 min-h-0">
+        <div style={{ flex: 1, minHeight: 0 }}>
           <PatientQueue />
         </div>
 
-        <div className="shrink-0">
+        <div style={{ flexShrink: 0 }}>
           <MessageBar />
         </div>
       </main>
 
       <GameOverlay />
-
       <DoctorNotification />
-
       <ReportList />
-
       <BulletTimeEffect />
 
       {phase === 'minigame' && renderMinigame()}

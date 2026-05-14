@@ -26,9 +26,32 @@ html, body {
 
 #root {
   width: 100%;
+  /* Android fallback chain: 100vh fallback → dvh → -webkit-fill-available */
+  height: 100vh;
   height: 100dvh;
   height: -webkit-fill-available;
+  display: -webkit-box;
+  display: -ms-flexbox;
   display: flex;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+  -ms-flex-direction: column;
   flex-direction: column;
   overflow: hidden;
+}
+
+/* Safe area insets for iOS notch / Android status bar */
+@supports (padding: env(safe-area-inset-bottom)) {
+  #root {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* backdrop-filter fallback for older Android browsers */
+@supports not (backdrop-filter: blur(1px)) {
+  .backdrop-blur-sm,
+  .backdrop-blur-md,
+  .backdrop-blur-lg {
+    background-color: rgba(255, 255, 255, 0.85) !important;
+  }
 }

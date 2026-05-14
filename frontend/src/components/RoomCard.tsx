@@ -1,6 +1,13 @@
 import { useGameStore } from '../stores/gameStore';
 import type { Room } from '../types/game';
 
+const PATIENT_TYPE_ICONS: Record<string, string> = {
+  emergency: '/assets/icons/icon_emergency.webp',
+  xray: '/assets/icons/icon_dr.webp',
+  ct: '/assets/icons/icon_ct.webp',
+  mri: '/assets/icons/icon_mri.webp',
+};
+
 const ROOM_IMAGES: Record<string, string> = {
   dr: '/assets/scenes/dr_room.webp',
   ct: '/assets/scenes/ct_room.webp',
@@ -8,7 +15,7 @@ const ROOM_IMAGES: Record<string, string> = {
   registration: '/assets/scenes/waiting_room.webp',
 };
 
-export function RoomCard({ room }: { room: Room }) {
+function RoomCard({ room }: { room: Room }) {
   const { selectedPatient, assignPatientToRoom, status } = useGameStore();
 
   const canAccept = selectedPatient &&
@@ -25,52 +32,59 @@ export function RoomCard({ room }: { room: Room }) {
   return (
     <div
       onClick={handleClick}
-      className={`
-        relative rounded-lg shadow-md cursor-pointer
-        flex flex-col min-h-0 h-full
-        transition-transform duration-200
-        ${room.isBusy ? 'opacity-90' : ''}
-        ${canAccept ? 'hover:scale-[1.02]' : ''}
-      `}
+      style={{
+        position: 'relative',
+        borderRadius: '0.5rem',
+        boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)',
+        cursor: 'pointer',
+        display: 'flex',
+        flexDirection: 'column',
+        minHeight: 0,
+        height: '100%',
+        transition: 'transform 0.2s',
+        opacity: room.isBusy ? 0.9 : 1,
+      }}
     >
       {canAccept && (
-        <div className="absolute -inset-[3px] rounded-lg border-[3px] border-amber-400 bg-amber-400/10 pointer-events-none z-20" />
+        <div style={{ position: 'absolute', inset: '-3px', borderRadius: '0.75rem', border: '3px solid #f59e0b', backgroundColor: 'rgba(245,158,11,0.1)', pointerEvents: 'none', zIndex: 20 }} />
       )}
       <img
         src={ROOM_IMAGES[room.type]}
         alt={room.name}
-        className="absolute inset-0 w-full h-full object-cover rounded-lg"
+        style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', borderRadius: '0.5rem' }}
       />
-      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent rounded-lg" />
+      <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.7), rgba(0,0,0,0.2), transparent)', borderRadius: '0.5rem' }} />
 
-      <div className="relative px-2 py-1.5 sm:px-3 sm:py-2 text-white flex items-end justify-between h-full z-10">
-        <div className="absolute top-1.5 right-1.5 sm:top-2 sm:right-2">
-          <div className={`
-            px-1 py-0.5 rounded-full text-[8px] sm:text-[10px] font-bold
-            ${room.isBusy ? 'bg-red-500/80' : 'bg-green-500/80'}
-          `}>
+      <div style={{ position: 'relative', padding: 'clamp(0.25rem, 1.5vw, 0.5rem)', color: 'white', display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', height: '100%', zIndex: 10 }}>
+        <div style={{ position: 'absolute', top: 'clamp(0.375rem, 1.5vw, 0.625rem)', right: 'clamp(0.375rem, 1.5vw, 0.625rem)' }}>
+          <div style={{
+            padding: '0.125rem 0.375rem',
+            borderRadius: '9999px',
+            fontSize: 'clamp(0.5rem, 2vw, 0.625rem)',
+            fontWeight: 700,
+            backgroundColor: room.isBusy ? 'rgba(239,68,68,0.8)' : 'rgba(34,197,94,0.8)',
+          }}>
             {room.isBusy ? '工作中' : '空闲'}
           </div>
         </div>
 
-        <div className="min-w-0 flex-1">
-          <h3 className="text-xs sm:text-sm font-bold drop-shadow-lg truncate">{room.name}</h3>
+        <div style={{ minWidth: 0, flex: 1 }}>
+          <h3 style={{ fontSize: 'clamp(0.625rem, 2vw, 0.75rem)', fontWeight: 700, textShadow: '0 1px 3px rgba(0,0,0,0.5)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{room.name}</h3>
 
           {room.isBusy && room.currentPatient && (
-            <div className="mt-0.5 sm:mt-1">
-              <div className="flex items-center gap-1">
-                <span className="text-xs sm:text-base">
-                  {room.currentPatient.type === 'emergency' ? '🚨' :
-                   room.currentPatient.type === 'xray' ? '🩻' :
-                   room.currentPatient.type === 'ct' ? '🧠' : '🔬'}
-                </span>
-                <span className="font-medium text-[10px] sm:text-xs drop-shadow truncate">{room.currentPatient.name}</span>
+            <div style={{ marginTop: '0.25rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                <img
+                  src={PATIENT_TYPE_ICONS[room.currentPatient.type]}
+                  alt=""
+                  style={{ width: 'clamp(0.875rem, 2.5vw, 1.125rem)', height: 'clamp(0.875rem, 2.5vw, 1.125rem)' }}
+                />
+                <span style={{ fontSize: 'clamp(0.5rem, 2vw, 0.625rem)', fontWeight: 500, textShadow: '0 1px 3px rgba(0,0,0,0.5)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{room.currentPatient.name}</span>
               </div>
 
-              <div className="bg-white/30 rounded-full h-1 sm:h-1.5 overflow-hidden mt-0.5">
+              <div style={{ backgroundColor: 'rgba(255,255,255,0.3)', borderRadius: '9999px', height: 'clamp(3px, 1vw, 6px)', overflow: 'hidden', marginTop: '0.25rem' }}>
                 <div
-                  className="h-full bg-white rounded-full"
-                  style={{ width: `${((room.currentPatient.processTime - room.remainingTime) / room.currentPatient.processTime) * 100}%` }}
+                  style={{ height: '100%', backgroundColor: 'white', borderRadius: '9999px', width: `${((room.currentPatient.processTime - room.remainingTime) / room.currentPatient.processTime) * 100}%` }}
                 />
               </div>
             </div>
@@ -78,7 +92,7 @@ export function RoomCard({ room }: { room: Room }) {
         </div>
 
         {room.isBusy && room.currentPatient && (
-          <div className="shrink-0 text-[8px] sm:text-[10px] text-white/70 ml-1">
+          <div style={{ flexShrink: 0, fontSize: 'clamp(0.5rem, 2vw, 0.625rem)', color: 'rgba(255,255,255,0.7)', marginLeft: '0.25rem' }}>
             {(room.remainingTime / 1000).toFixed(1)}s
           </div>
         )}
@@ -95,12 +109,24 @@ export function RoomList() {
   const activeRooms = rooms.filter(r => r.type !== 'registration');
 
   return (
-    <div className="h-full flex flex-col gap-1 px-3 py-2 rounded-2xl bg-white/30 backdrop-blur-lg shadow-lg ring-1 ring-white/20 overflow-hidden">
-      <h2 className="text-xs sm:text-sm font-bold text-gray-700 flex items-center gap-1 shrink-0">
-        <span>🏥</span> 检查室
+    <div style={{
+      height: '100%',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '0.25rem',
+      padding: 'clamp(0.5rem, 2vw, 0.75rem)',
+      borderRadius: '1rem',
+      backgroundColor: 'rgba(255,255,255,0.3)',
+      backdropFilter: 'blur(12px)',
+      boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05)',
+      border: '1px solid rgba(255,255,255,0.2)',
+      overflow: 'hidden',
+    }}>
+      <h2 style={{ fontSize: 'clamp(0.75rem, 2.5vw, 0.875rem)', fontWeight: 700, color: '#374151', display: 'flex', alignItems: 'center', gap: '0.25rem', flexShrink: 0 }}>
+        <span style={{ fontSize: 'clamp(0.875rem, 2.5vw, 1rem)' }}>🏥</span> 检查室
       </h2>
 
-      <div className="grid grid-cols-3 gap-2 flex-1 min-h-0">
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem', flex: 1, minHeight: 0 }}>
         {activeRooms.map(room => (
           <RoomCard key={room.id} room={room} />
         ))}

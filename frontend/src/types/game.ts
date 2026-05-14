@@ -42,10 +42,10 @@ export interface GameState {
   emergencyHearts: number;
   normalCount: number;
   normalHearts: number;
-  reportCount: number;
-  reportBonus: number;
-  bulletTimeEnd: number;
-  bulletTimeTriggered: boolean;
+  patientLeftAlert: boolean;
+  difficulty: number;
+  difficultyAlertShown: boolean;
+  freezeSeconds: number;
 }
 
 export interface PendingReport {

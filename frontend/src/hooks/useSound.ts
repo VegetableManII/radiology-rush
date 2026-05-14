@@ -1,14 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Howl } from 'howler';
 
-// Detect iOS / mobile Safari
-function isIOS(): boolean {
-  return (
-    /iPad|iPhone|iPod/.test(navigator.userAgent) ||
-    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
-  );
-}
-
 export type SoundKey =
   | 'bgm'
   | 'sfx_check'
@@ -87,27 +79,18 @@ export function useBGM(status: string) {
 }
 
 // iOS Safari requires a user gesture to unlock the audio context.
-// We use a silent Howl to "touch unlock" it on first user interaction.
-function touchUnlock() {
-  const unlockSound = new Howl({ src: ['/assets/sfx/sfx_click.mp3'], volume: 0 });
-  unlockSound.play();
-  unlockSound.unload();
-}
-
+// Since Howl already uses html5: true (which handles unlock natively), we just
+// set a flag. No sound file is needed.
 const _audioUnlocked = { value: false };
 
 /**
  * Call this once on first user interaction (e.g. onClick on a start button).
- * On iOS it pre-plays a silent sound to unlock Web Audio, allowing subsequent
- * sounds to play without further gesture requirements.
+ * On iOS/Android it marks the audio context as unlocked so subsequent
+ * sounds can play without further gesture requirements.
  */
 export function unlockAudio() {
   if (_audioUnlocked.value) return;
   _audioUnlocked.value = true;
-  if (isIOS()) {
-    touchUnlock();
-  }
-  // Also confirm unlock works (no click sound needed)
 }
 
 /**

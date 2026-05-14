@@ -39,9 +39,7 @@ export function DoctorNotification() {
 
     setNotifications((prev) => {
       const updated = [newNotification, ...prev];
-      if (updated.length > MAX_NOTIFICATIONS) {
-        return updated.slice(1);
-      }
+      if (updated.length > MAX_NOTIFICATIONS) return updated.slice(1);
       return updated;
     });
 
@@ -51,16 +49,11 @@ export function DoctorNotification() {
   useEffect(() => {
     if (status !== 'playing') return;
 
-    // Add first notification after a short delay
-    const initialTimeout = setTimeout(() => {
-      addNotification();
-    }, 5000);
+    const initialTimeout = setTimeout(() => addNotification(), 5000);
 
-    // Set up interval for subsequent notifications
     let intervalId: ReturnType<typeof setInterval>;
-
     const scheduleNext = () => {
-      const delay = [10000, 12500, 15000][Math.floor(Math.random() * 3)]; // random 10-15s
+      const delay = [10000, 12500, 15000][Math.floor(Math.random() * 3)];
       intervalId = setTimeout(() => {
         addNotification();
         scheduleNext();
@@ -76,9 +69,7 @@ export function DoctorNotification() {
   }, [status, addNotification]);
 
   useEffect(() => {
-    if (status !== 'playing') {
-      setNotifications([]);
-    }
+    if (status !== 'playing') setNotifications([]);
   }, [status]);
 
   const removeNotification = useCallback((id: string) => {
@@ -86,7 +77,17 @@ export function DoctorNotification() {
   }, []);
 
   return (
-    <div className="fixed bottom-16 right-4 z-50 flex flex-col gap-2 pointer-events-none items-end">
+    <div style={{
+      position: 'fixed',
+      bottom: '4rem',
+      right: '1rem',
+      zIndex: 50,
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '0.5rem',
+      pointerEvents: 'none',
+      alignItems: 'flex-end',
+    }}>
       <AnimatePresence>
         {notifications.map((notification) => (
           <motion.div
@@ -95,26 +96,30 @@ export function DoctorNotification() {
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: 80, opacity: 0, scale: 0.8 }}
             transition={{ duration: 0.35, ease: 'easeOut' }}
-            className="relative pointer-events-auto cursor-pointer group flex items-end"
+            style={{ position: 'relative', pointerEvents: 'auto', cursor: 'pointer', display: 'flex', alignItems: 'flex-end' }}
           >
-            {/* Avatar - left side, overlapping bubble edge */}
-            <div className="relative shrink-0 z-10 -mr-6">
-              <div className="w-14 h-14 rounded-full overflow-hidden">
+            <div style={{ position: 'relative', flexShrink: 0, zIndex: 10, marginRight: '-1.5rem' }}>
+              <div style={{ width: '3.5rem', height: '3.5rem', borderRadius: '50%', overflow: 'hidden' }}>
                 <img
                   src="/assets/icons/doctor_main.webp"
                   alt="科室主任"
-                  className="w-full h-[130%] object-cover object-top"
+                  style={{ width: '100%', height: '130%', objectFit: 'cover', objectPosition: 'top' }}
                 />
               </div>
             </div>
 
-            {/* Bubble body */}
             <div
-              className="bg-white/90 backdrop-blur-sm rounded-2xl px-3 py-2 shadow-xl border border-gray-200 hover:bg-white hover:shadow-2xl transition-all duration-150 inline-flex items-center relative group cursor-pointer"
-              style={{ boxShadow: '0 8px 32px rgba(0,0,0,0.15), 0 2px 8px rgba(0,0,0,0.1)' }}
+              style={{
+                backgroundColor: 'rgba(255,255,255,0.92)',
+                backdropFilter: 'blur(8px)',
+                borderRadius: '1rem',
+                padding: '0.5rem 0.75rem',
+                boxShadow: '0 8px 32px rgba(0,0,0,0.15), 0 2px 8px rgba(0,0,0,0.1)',
+                border: '1px solid #e5e7eb',
+              }}
               onClick={() => removeNotification(notification.id)}
             >
-              <p className="text-red-600 font-bold text-sm leading-snug whitespace-nowrap">
+              <p style={{ color: '#dc2626', fontWeight: 700, fontSize: '0.875rem', lineHeight: 1.4, whiteSpace: 'nowrap' }}>
                 {notification.message}
               </p>
             </div>

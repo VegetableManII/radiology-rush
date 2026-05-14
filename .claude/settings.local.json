@@ -10,7 +10,15 @@
       "Bash(sharp -i bullet_time.png -resize 256x256 -o bullet_time.webp)",
       "Bash(gm convert *)",
       "Bash(npx sharp *)",
-      "Bash(npm list *)"
+      "Bash(npm list *)",
+      "Bash(timeout:*)",
+      "mcp__ide__getDiagnostics",
+      "Bash(ls:*)",
+      "Bash(powershell:*)",
+      "Bash(node:*)",
+      "Bash(netstat:*)",
+      "Bash(taskkill:*)",
+      "Bash(tasklist:*)"
     ]
   }
 }

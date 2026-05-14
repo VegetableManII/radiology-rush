@@ -2,30 +2,31 @@ import { useGameStore } from '../stores/gameStore';
 import type { Patient } from '../types/game';
 
 const PATIENT_ICONS: Record<string, string> = {
-  xray: '🩻',
-  ct: '🧠',
-  mri: '🔬',
-  emergency: '🚨',
+  xray: '/assets/icons/icon_dr.webp',
+  ct: '/assets/icons/icon_ct.webp',
+  mri: '/assets/icons/icon_mri.webp',
+  emergency: '/assets/icons/icon_emergency.webp',
 };
 
-const PATIENT_COLORS: Record<string, string> = {
-  xray: 'bg-blue-50 border-blue-200',
-  ct: 'bg-purple-50 border-purple-200',
-  mri: 'bg-green-50 border-green-200',
-  emergency: 'bg-red-50 border-red-200',
+const PATIENT_BG: Record<string, string> = {
+  xray: '#eff6ff',
+  ct: '#f5f3ff',
+  mri: '#f0fdf4',
+  emergency: '#fef2f2',
 };
 
-const PATIENCE_COLORS: Record<string, string> = {
-  high: 'bg-green-400',
-  medium: 'bg-yellow-400',
-  low: 'bg-red-400',
+const PATIENT_BORDER: Record<string, string> = {
+  xray: '#bfdbfe',
+  ct: '#ddd6fe',
+  mri: '#bbf7d0',
+  emergency: '#fecaca',
 };
 
-function getPatienceColor(percent: number): string {
-  if (percent > 50) return PATIENCE_COLORS.high;
-  if (percent > 25) return PATIENCE_COLORS.medium;
-  return PATIENCE_COLORS.low;
-}
+const getPatienceColor = (percent: number) => {
+  if (percent > 50) return '#4ade80';
+  if (percent > 25) return '#facc15';
+  return '#f87171';
+};
 
 export function PatientQueue() {
   const { patients, selectedPatient, selectPatient, status } = useGameStore();
@@ -38,21 +39,31 @@ export function PatientQueue() {
   };
 
   return (
-    <div className="h-full rounded-2xl bg-white/30 backdrop-blur-lg shadow-lg ring-1 ring-white/20 flex flex-col overflow-hidden">
-      <div className="shrink-0 px-3 py-2 flex items-center justify-between border-b border-white/20">
-        <h2 className="text-xs sm:text-sm font-bold text-gray-700 flex items-center gap-1">
-          <span>📋</span> 候诊区
-          <span className="text-[10px] sm:text-xs font-normal text-gray-400">({patients.length}/20)</span>
+    <div style={{
+      height: '100%',
+      borderRadius: '1rem',
+      backgroundColor: 'rgba(255,255,255,0.3)',
+      backdropFilter: 'blur(12px)',
+      boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05)',
+      border: '1px solid rgba(255,255,255,0.2)',
+      display: 'flex',
+      flexDirection: 'column',
+      overflow: 'hidden',
+    }}>
+      <div style={{ flexShrink: 0, padding: 'clamp(0.5rem, 2vw, 0.75rem) clamp(0.75rem, 2vw, 1rem)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.2)' }}>
+        <h2 style={{ fontSize: 'clamp(0.75rem, 2.5vw, 0.875rem)', fontWeight: 700, color: '#374151', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+          <span style={{ fontSize: 'clamp(0.875rem, 2.5vw, 1rem)' }}>📋</span> 候诊区
+          <span style={{ fontSize: 'clamp(0.625rem, 2vw, 0.75rem)', fontWeight: 400, color: '#9ca3af' }}>({patients.length}/20)</span>
         </h2>
       </div>
 
-      <div className="flex-1 min-h-0 p-2 overflow-y-auto">
+      <div style={{ flex: 1, minHeight: 0, padding: '0.5rem', overflowY: 'auto' }}>
         {patients.length === 0 ? (
-          <div className="h-full flex items-center justify-center text-gray-400 text-xs">
+          <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9ca3af', fontSize: 'clamp(0.625rem, 2vw, 0.75rem)' }}>
             暂无候诊病人
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-2">
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.5rem' }}>
             {patients.map((patient) => {
               const isSelected = selectedPatient?.id === patient.id;
               const patiencePercent = (patient.patience / patient.maxPatience) * 100;
@@ -61,33 +72,44 @@ export function PatientQueue() {
                 <div
                   key={patient.id}
                   onClick={() => handleSelect(patient)}
-                  className={`
-                    relative flex items-center gap-1.5 px-2 py-1.5 rounded-lg border cursor-pointer
-                    transition-all select-none
-                    ${PATIENT_COLORS[patient.type]}
-                    ${isSelected ? 'ring-2 ring-amber-400 bg-amber-50/80' : 'hover:bg-white/50'}
-                  `}
+                  style={{
+                    position: 'relative',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.375rem',
+                    padding: 'clamp(0.375rem, 1.5vw, 0.625rem)',
+                    borderRadius: '0.5rem',
+                    border: `1px solid ${PATIENT_BORDER[patient.type]}`,
+                    backgroundColor: PATIENT_BG[patient.type],
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                    userSelect: 'none',
+                    ...(isSelected ? {
+                      outline: '2px solid #f59e0b',
+                      outlineOffset: '-2px',
+                      backgroundColor: 'rgba(253,230,138,0.5)',
+                    } : {}),
+                  }}
                 >
-                  <span className="text-xl sm:text-2xl shrink-0">{PATIENT_ICONS[patient.type]}</span>
+                  <img
+                    src={PATIENT_ICONS[patient.type]}
+                    alt=""
+                    style={{ width: 'clamp(1.5rem, 4vw, 2rem)', height: 'clamp(1.5rem, 4vw, 2rem)', flexShrink: 0 }}
+                  />
 
-                  <div className="flex-1 min-w-0 flex flex-col gap-2 px-3 py-1">
-                    <div className="flex items-center justify-between gap-1">
-                      <span className="text-sm sm:text-base font-medium text-gray-700 truncate">{patient.name}</span>
+                  <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '0.5rem', padding: '0.25rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.25rem' }}>
+                      <span style={{ fontSize: 'clamp(0.75rem, 2.5vw, 0.875rem)', fontWeight: 500, color: '#374151', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{patient.name}</span>
                       {patient.type === 'emergency' && (
-                        <span className="shrink-0 text-xs sm:text-sm font-bold text-red-500 bg-red-100 px-2 rounded">急</span>
+                        <span style={{ flexShrink: 0, fontSize: 'clamp(0.625rem, 2vw, 0.75rem)', fontWeight: 700, color: '#dc2626', backgroundColor: '#fee2e2', padding: '0 0.5rem', borderRadius: '0.25rem' }}>急</span>
                       )}
                     </div>
-                    <div className="bg-gray-200/60 rounded-full h-[6px] sm:h-[8px] overflow-hidden">
+                    <div style={{ backgroundColor: 'rgba(209,213,219,0.6)', borderRadius: '9999px', height: 'clamp(4px, 1.5vw, 6px)', overflow: 'hidden' }}>
                       <div
-                        className={`h-full rounded-full transition-colors duration-300 ${getPatienceColor(patiencePercent)}`}
-                        style={{ width: `${patiencePercent}%` }}
+                        style={{ height: '100%', borderRadius: '9999px', transition: 'background-color 0.3s', width: `${patiencePercent}%`, backgroundColor: getPatienceColor(patiencePercent) }}
                       />
                     </div>
                   </div>
-
-                  {isSelected && (
-                    <div className="absolute -inset-[2px] rounded-lg border-2 border-amber-400 pointer-events-none" />
-                  )}
                 </div>
               );
             })}
