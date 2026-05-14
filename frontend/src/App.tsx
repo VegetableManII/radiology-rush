@@ -3,11 +3,11 @@ import { Game } from './components/Game';
 
 // 预加载场景图片 (WebP格式)
 const SCENE_IMAGES = [
-  '/assets/scenes/webp/main_bg.webp',
-  '/assets/scenes/webp/dr_room.webp',
-  '/assets/scenes/webp/ct_room.webp',
-  '/assets/scenes/webp/mri_room.webp',
-  '/assets/scenes/webp/waiting_room.webp',
+  '/assets/scenes/main_bg.webp',
+  '/assets/scenes/dr_room.webp',
+  '/assets/scenes/ct_room.webp',
+  '/assets/scenes/mri_room.webp',
+  '/assets/scenes/waiting_room.webp',
 ];
 
 function preloadImages(urls: string[]) {

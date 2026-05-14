@@ -46,7 +46,7 @@ const generatePatient = (difficulty: number, reportBonus: number = 0): Patient =
   const name = PATIENT_NAMES[Math.floor(Math.random() * PATIENT_NAMES.length)];
 
   const fullPatience = basePatience;
-  const patienceSpeed = 0.8 + Math.random() * 0.4;
+  const patienceSpeed = 0.5 + Math.random() * 1.0;
 
   return {
     id: generatePatientId(),
@@ -117,6 +117,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
   normalHearts: 0,
   reportCount: 0,
   reportBonus: 0,
+  bulletTimeEnd: 0,
+  bulletTimeTriggered: false,
 
   startGame: () => {
     set({
@@ -137,6 +139,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
       normalCount: 0,
       reportCount: 0,
       reportBonus: 0,
+      bulletTimeEnd: 0,
+      bulletTimeTriggered: false,
     });
   },
 
@@ -248,8 +252,12 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
     // Report count tracking: every 5 reports = +1 reportBonus
     const reportsAdded = success === 1 ? 1 : 0;
-    const newReportCount = reportCount + reportsAdded;
-    const newReportBonus = reportBonus + Math.floor(newReportCount / 5);
+    // 从 reportBonus 和 reportCount 反推实际总数
+    const oldTotal = reportBonus * 5 + reportCount;
+    const newTotal = oldTotal + reportsAdded;
+    const oldBonus = Math.floor(oldTotal / 5);
+    const newBonus = Math.floor(newTotal / 5);
+    const newReportBonus = reportBonus + (newBonus - oldBonus);
 
     const totalHeartsEarned = emergencyHeartsEarned + normalHeartsEarned;
 
@@ -268,7 +276,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       pendingReports: newPendingReport ? [...pendingReports, newPendingReport] : pendingReports,
       emergencyCount: remainderEmergency,
       normalCount: remainderNormal,
-      reportCount: newReportCount % 5,
+      reportCount: newTotal % 5,
       emergencyHearts: emergencyHearts + emergencyHeartsEarned,
       normalHearts: normalHearts + normalHeartsEarned,
       reportBonus: newReportBonus,
@@ -308,15 +316,25 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
 
   updateGame: (deltaTime) => {
-    const { status, patients, lives, time, phase } = get();
+    const { status, patients, lives, time, phase, bulletTimeEnd, reportBonus } = get();
     if (status !== 'playing' || phase === 'minigame') return;
 
     const adjustedDelta = deltaTime * get().gameSpeed;
 
+    // 计算当前难度，每15秒+1难度
+    const difficulty = Math.floor(time / 15000);
+
+    // 子弹时间：根据 reportBonus 调整消耗速度倍率
+    // reportBonus = 0 时消耗 1.0x，reportBonus = 1 时消耗 0.8x...
+    // bulletTimeEnd > time 时为子弹时间
+    const isBulletTime = bulletTimeEnd > time;
+    const bulletTimeMultiplier = isBulletTime ? Math.max(0.2, 1 - reportBonus * 0.2) : 1;
+    const difficultyMultiplier = (1 + difficulty * 0.1) * bulletTimeMultiplier;
+
     let newLives = lives;
     const updatedPatients = patients.map(patient => ({
       ...patient,
-      patience: Math.max(0, patient.patience - adjustedDelta * 0.5 * patient.patienceSpeed),
+      patience: Math.max(0, patient.patience - adjustedDelta * 0.5 * patient.patienceSpeed * difficultyMultiplier),
       mood: Math.max(0, patient.mood - adjustedDelta * 0.01),
     }));
 
@@ -325,7 +343,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
     const remainingPatients = updatedPatients.filter(p => p.patience > 0);
 
-    // Play sound before state change
     if (newLives <= 0) {
       playSFX('sfx_game_over');
       set({ status: 'gameover', phase: 'gameover', lives: 0 });
@@ -333,7 +350,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     }
 
     if (newLives < lives) {
-      playSFX('sfx_life_lost');
+      playSFX('sfx_heart_lost');
     }
 
     set({
@@ -365,20 +382,34 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
 
   submitReports: () => {
-    const { pendingReports, score, reportCount, reportBonus } = get();
+    const { pendingReports, score, reportCount, reportBonus, time } = get();
     const completedCount = pendingReports.filter(r => r.completed).length;
     const remainingReports = pendingReports.filter(r => !r.completed);
     const bonusScore = completedCount * 5;
 
     // Report count tracking: every 5 reports = +1 reportBonus
-    const newReportCount = reportCount + completedCount;
-    const newReportBonus = reportBonus + Math.floor(newReportCount / 5);
+    // 从 reportBonus 和 reportCount 反推实际总数
+    const oldTotal = reportBonus * 5 + reportCount;
+    const newTotal = oldTotal + completedCount;
+    const oldBonus = Math.floor(oldTotal / 5);
+    const newBonus = Math.floor(newTotal / 5);
+    const newReportBonus = reportBonus + (newBonus - oldBonus);
+
+    // 如果 reportBonus 增加，触发子弹时间 15秒
+    let newBulletTimeEnd = get().bulletTimeEnd;
+    let bulletTimeTriggered = false;
+    if (newReportBonus > reportBonus) {
+      newBulletTimeEnd = time + 15000;
+      bulletTimeTriggered = true;
+    }
 
     set({
       pendingReports: remainingReports,
       score: score + bonusScore,
-      reportCount: newReportCount % 5,
+      reportCount: newTotal % 5,
       reportBonus: newReportBonus,
+      bulletTimeEnd: newBulletTimeEnd,
+      bulletTimeTriggered,
     });
 
     if (completedCount > 0) {

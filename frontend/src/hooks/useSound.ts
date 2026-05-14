@@ -11,7 +11,6 @@ function isIOS(): boolean {
 
 export type SoundKey =
   | 'bgm'
-  | 'sfx_click'
   | 'sfx_check'
   | 'sfx_patient_arrive'
   | 'sfx_minigame_success'
@@ -20,12 +19,11 @@ export type SoundKey =
   | 'sfx_heart_earn'
   | 'sfx_doctor_notify'
   | 'sfx_emergency_alert'
-  | 'sfx_life_lost'
+  | 'sfx_heart_lost'
   | 'sfx_game_over';
 
 const SOUND_URLS: Record<SoundKey, string> = {
   bgm: '/assets/bgm/hospital_bgm.mp3',
-  sfx_click: '/assets/sfx/sfx_click.mp3',
   sfx_check: '/assets/sfx/sfx_check.mp3',
   sfx_patient_arrive: '/assets/sfx/sfx_patient_arrive.mp3',
   sfx_minigame_success: '/assets/sfx/sfx_minigame_success.mp3',
@@ -34,7 +32,7 @@ const SOUND_URLS: Record<SoundKey, string> = {
   sfx_heart_earn: '/assets/sfx/sfx_heart_earn.mp3',
   sfx_doctor_notify: '/assets/sfx/sfx_doctor_notify.mp3',
   sfx_emergency_alert: '/assets/sfx/sfx_emergency_alert.mp3',
-  sfx_life_lost: '/assets/sfx/sfx_life_lost.mp3',
+  sfx_heart_lost: '/assets/sfx/sfx_heart_lost.mp3',
   sfx_game_over: '/assets/sfx/sfx_game_over.mp3',
 };
 
@@ -109,8 +107,7 @@ export function unlockAudio() {
   if (isIOS()) {
     touchUnlock();
   }
-  // Also play a click SFX immediately to confirm unlock works
-  playSFX('sfx_click');
+  // Also confirm unlock works (no click sound needed)
 }
 
 /**

@@ -2,10 +2,10 @@ import { useGameStore } from '../stores/gameStore';
 import type { Room } from '../types/game';
 
 const ROOM_IMAGES: Record<string, string> = {
-  dr: '/assets/scenes/webp/dr_room.webp',
-  ct: '/assets/scenes/webp/ct_room.webp',
-  mri: '/assets/scenes/webp/mri_room.webp',
-  registration: '/assets/scenes/webp/waiting_room.webp',
+  dr: '/assets/scenes/dr_room.webp',
+  ct: '/assets/scenes/ct_room.webp',
+  mri: '/assets/scenes/mri_room.webp',
+  registration: '/assets/scenes/waiting_room.webp',
 };
 
 export function RoomCard({ room }: { room: Room }) {

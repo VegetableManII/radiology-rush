@@ -1,25 +1,16 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npm run:*)",
-      "Bash(npm install:*)",
-      "Bash(mmx:*)",
-      "Read(//c/Users/13437/.local/bin//**)",
-      "Read(//c/Users/13437/AppData/Local//**)",
-      "Bash(Get-ChildItem:*)",
-      "Bash(npx tsc:*)",
-      "Bash(cd:*)",
-      "Bash(powershell:*)",
-      "Bash(python:*)",
-      "Bash(dir:*)",
-      "mcp__ide__getDiagnostics",
-      "Bash(cwebp:*)",
-      "Bash(node:*)",
-      "Bash(netstat:*)",
-      "Bash(tasklist:*)",
-      "Bash(taskkill:*)",
-      "Bash(cmd:*)",
-      "Bash(ipconfig:*)"
+      "Bash(npm install *)",
+      "Bash(node -e ' *)",
+      "Bash(node *)",
+      "Bash(mmx *)",
+      "Bash(npm run *)",
+      "Bash(npx tsc *)",
+      "Bash(sharp -i bullet_time.png -resize 256x256 -o bullet_time.webp)",
+      "Bash(gm convert *)",
+      "Bash(npx sharp *)",
+      "Bash(npm list *)"
     ]
   }
 }

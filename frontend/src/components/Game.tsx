@@ -11,6 +11,7 @@ import { CtGame } from './CtGame';
 import { MriGame } from './MriGame';
 import { DoctorNotification } from './DoctorNotification';
 import { ReportList } from './ReportList';
+import { BulletTimeEffect } from './BulletTimeEffect';
 
 export function Game() {
   const { status, phase, currentMinigamePatient, currentRoomType, addPatient, updateGame, completeMinigame } = useGameStore();
@@ -84,7 +85,7 @@ export function Game() {
   return (
     <div className="w-full h-screen flex flex-col relative overflow-hidden">
       <img
-        src="/assets/scenes/webp/main_bg.webp"
+        src="/assets/scenes/main_bg.webp"
         alt=""
         className="absolute inset-0 w-full h-full object-cover -z-10"
       />
@@ -111,6 +112,8 @@ export function Game() {
       <DoctorNotification />
 
       <ReportList />
+
+      <BulletTimeEffect />
 
       {phase === 'minigame' && renderMinigame()}
     </div>

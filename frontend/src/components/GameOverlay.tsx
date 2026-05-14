@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { useGameStore } from '../stores/gameStore';
-import { playSFX, playBGM, unlockAudio } from '../hooks/useSound';
+import { playBGM, unlockAudio } from '../hooks/useSound';
 
 export function GameOverlay() {
   const { status, score, time, resetGame, startGame } = useGameStore();
@@ -37,9 +37,9 @@ export function GameOverlay() {
             <motion.div
               animate={{ rotate: [0, -5, 5, 0] }}
               transition={{ repeat: Infinity, duration: 2 }}
-              className="text-7xl mb-6"
+              className="w-64 h-64 mx-auto mb-6"
             >
-              🏥
+              <img src="/assets/ui/game_start.webp" alt="logo" className="w-full h-full object-contain" />
             </motion.div>
             
             <h1 className="text-3xl font-bold text-gray-800 mb-2">
@@ -59,7 +59,7 @@ export function GameOverlay() {
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              onClick={() => { unlockAudio(); playBGM(); playSFX('sfx_click'); startGame(); }}
+              onClick={() => { unlockAudio(); playBGM(); startGame(); }}
               className="w-full py-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold text-xl rounded-xl shadow-lg"
             >
               开始接诊
@@ -73,9 +73,9 @@ export function GameOverlay() {
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ type: 'spring' }}
-              className="text-7xl mb-6"
+              className="w-64 h-64 mx-auto mb-6"
             >
-              😵
+              <img src="/assets/ui/game_over.webp" alt="game over" className="w-full h-full object-contain" />
             </motion.div>
             
             <h1 className="text-3xl font-bold text-red-600 mb-2">
@@ -103,7 +103,7 @@ export function GameOverlay() {
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              onClick={() => { unlockAudio(); playSFX('sfx_click'); resetGame(); }}
+              onClick={() => { unlockAudio(); resetGame(); }}
               className="w-full py-4 bg-gradient-to-r from-orange-500 to-red-600 text-white font-bold text-xl rounded-xl shadow-lg"
             >
               再来一局

@@ -1,10 +1,11 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useGameStore } from '../stores/gameStore';
 
 export function ReportList() {
   const { pendingReports, toggleReportComplete, submitReports, status } = useGameStore();
   const [isOpen, setIsOpen] = useState(false);
+  const panelRef = useRef<HTMLDivElement>(null);
 
   // 重置为 playing 时关闭面板
   useEffect(() => {
@@ -13,11 +14,25 @@ export function ReportList() {
     }
   }, [status]);
 
+  // 点击非报告容器区域关闭
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (isOpen && panelRef.current && !panelRef.current.contains(e.target as Node)) {
+        const button = document.querySelector('[data-report-button]');
+        if (button && !button.contains(e.target as Node)) {
+          setIsOpen(false);
+        }
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isOpen]);
+
   const incompleteCount = pendingReports.filter(r => !r.completed).length;
   const completedCount = pendingReports.filter(r => r.completed).length;
 
   const handleSubmit = () => {
-    // playSFX('sfx_click');
     submitReports();
     setIsOpen(false);
   };
@@ -28,17 +43,16 @@ export function ReportList() {
     <>
       {/* Report Count Icon Button */}
       <button
-        onClick={() => { /* playSFX('sfx_click'); */ setIsOpen(!isOpen); }}
+        data-report-button
+        onClick={() => setIsOpen(!isOpen)}
         className="fixed bottom-4 left-4 z-40 flex items-center"
       >
-        {/* Badge on icon */}
         <div className="relative pointer-events-auto">
           <img
-            src="/assets/computer_icon.webp"
+            src="/assets/icons/computer_icon.webp"
             alt="报告"
             className="w-16 h-16"
           />
-          {/* Badge */}
           {incompleteCount > 0 && (
             <motion.span
               initial={{ scale: 0 }}
@@ -56,6 +70,7 @@ export function ReportList() {
       <AnimatePresence>
         {isOpen && (
           <motion.div
+            ref={panelRef}
             initial={{ x: -320, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: -320, opacity: 0 }}
@@ -65,12 +80,6 @@ export function ReportList() {
             {/* Header */}
             <div className="bg-blue-500 text-white px-4 py-3 flex items-center justify-between rounded-t-2xl">
               <h3 className="font-bold text-sm">待写报告清单</h3>
-              <button
-                onClick={() => setIsOpen(false)}
-                className="w-6 h-6 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center text-sm"
-              >
-                ✕
-              </button>
             </div>
 
             {/* Report List */}

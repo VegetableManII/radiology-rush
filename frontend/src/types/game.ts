@@ -38,12 +38,14 @@ export interface GameState {
   selectedPatient: Patient | null;
   gameSpeed: number;
   pendingReports: PendingReport[];
-  emergencyCount: number;   // 急诊余数（不足1颗心的部分）
-  emergencyHearts: number;  // 急诊已兑换爱心数
-  normalCount: number;     // 普通病人余数（不足1颗心的部分）
-  normalHearts: number;    // 普通病人已兑换爱心数
-  reportCount: number;     // 报告余数（不足1份的部分）
-  reportBonus: number;      // 提交报告加成（新病人初始耐心+500ms/份）
+  emergencyCount: number;
+  emergencyHearts: number;
+  normalCount: number;
+  normalHearts: number;
+  reportCount: number;
+  reportBonus: number;
+  bulletTimeEnd: number;
+  bulletTimeTriggered: boolean;
 }
 
 export interface PendingReport {

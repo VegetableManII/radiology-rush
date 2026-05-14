@@ -101,7 +101,7 @@ export function DoctorNotification() {
             <div className="relative shrink-0 z-10 -mr-6">
               <div className="w-14 h-14 rounded-full overflow-hidden">
                 <img
-                  src="/assets/doctor_main.webp"
+                  src="/assets/icons/doctor_main.webp"
                   alt="科室主任"
                   className="w-full h-[130%] object-cover object-top"
                 />
