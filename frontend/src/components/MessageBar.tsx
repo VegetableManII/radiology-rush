@@ -1,22 +1,10 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { useGameStore } from '../stores/gameStore';
 
-const MESSAGES = [
-  '今日影像科已爆单。',
-  'CT室：我真的转不动了。',
-  '病人：护士，我能快点吗？',
-  '急诊病人已到达，建议放下奶茶立即处理。',
-  '叮～新病人到了',
-  '排队的人越来越多了...',
-  '稳住，我们能赢！',
-  '注意！有急诊！',
-  '呼～今天也是忙碌的一天呢',
-  '💡 及时清理报告可延长病人的等待时间哦',
-  '优先处理急诊病人可以获得生命值哦',
-];
-
 export function MessageBar() {
+  const { t } = useTranslation();
   const [message, setMessage] = useState('');
   const { status, patients } = useGameStore();
   const emergencyCount = patients.filter(p => p.type === 'emergency').length;
@@ -26,17 +14,19 @@ export function MessageBar() {
 
     const interval = setInterval(() => {
       if (emergencyCount > 0) {
-        setMessage('🚨 有急诊病人需要处理！');
+        setMessage(t('message.emergency'));
       } else {
-        const randomMessage = MESSAGES[Math.floor(Math.random() * MESSAGES.length)];
+        const messages = t('message.messages', { returnObjects: true }) as string[];
+        const randomMessage = messages[Math.floor(Math.random() * messages.length)];
         setMessage(randomMessage);
       }
     }, 5000);
 
-    setMessage(MESSAGES[Math.floor(Math.random() * MESSAGES.length)]);
+    const messages = t('message.messages', { returnObjects: true }) as string[];
+    setMessage(messages[Math.floor(Math.random() * messages.length)]);
 
     return () => clearInterval(interval);
-  }, [status, emergencyCount]);
+  }, [status, emergencyCount, t]);
 
   return (
     <AnimatePresence mode="wait">

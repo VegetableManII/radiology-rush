@@ -1,0 +1,110 @@
+{
+  "common": {
+    "loading": "加载中..."
+  },
+  "game": {
+    "title": "影像科的日常",
+    "subtitle": "Radiology Rush",
+    "start": {
+      "goal": "目标：尽可能多地处理病人",
+      "action": "操作：点击病人选中，再点击检查室分配",
+      "attention": "注意：急诊病人尽量优先处理！",
+      "warning": "警告：病人耐心耗尽会扣除生命值",
+      "startButton": "开始接诊"
+    },
+    "gameover": {
+      "title": "科室崩盘了",
+      "subtitle": "今天已经尽力了...",
+      "finalScore": "最终得分",
+      "duration": "坚持时间",
+      "tip": "提示：记得优先处理急诊病人，保持节奏！",
+      "restartButton": "再来一局"
+    },
+    "paused": {
+      "title": "游戏暂停",
+      "subtitle": "休息一下，整理思路"
+    }
+  },
+  "ui": {
+    "score": "分数",
+    "combo": "连击",
+    "difficulty": "难度",
+    "waitingRoom": "候诊区",
+    "noPatients": "暂无候诊病人",
+    "patientCount": "{{count}}/20",
+    "emergency": "急",
+    "examRoom": "检查室",
+    "busy": "工作中",
+    "idle": "空闲"
+  },
+  "minigame": {
+    "dr": {
+      "title": "胸片室",
+      "instruction": "点击骨骼图上骨折的位置",
+      "success": "找对了！",
+      "fail": "找错了"
+    },
+    "ct": {
+      "title": "CT室",
+      "instruction": "找出病变位置！",
+      "findLesion": "找出 {{part}} CT 中有病变的1张",
+      "brain": "脑部",
+      "chest": "胸部",
+      "abdomen": "腹部",
+      "success": "找对了！",
+      "fail": "找错了"
+    },
+    "mri": {
+      "title": "核磁室",
+      "instruction": "判断病变类型！",
+      "scanned": "已扫描",
+      "bright": "亮",
+      "dark": "暗",
+      "edema": "水肿",
+      "hemorrhage": "出血",
+      "lipoma": "脂肪瘤",
+      "success": "正确！",
+      "fail": "错误"
+    }
+  },
+  "notification": {
+    "patientLeaved": "有病人因等待太久离开了！",
+    "emergencyArrived": "急诊病人来了！",
+    "combo": "连击 x{{count}}！",
+    "bulletTime": "子弹时间！"
+  },
+  "room": {
+    "dr": "DR拍片室",
+    "ct": "CT室",
+    "mri": "MRI核磁室",
+    "registration": "登记台"
+  },
+  "message": {
+    "emergency": "🚨 有急诊病人需要处理！",
+    "messages": [
+      "今日影像科已爆单。",
+      "CT室：我真的转不动了。",
+      "病人：护士，我能快点吗？",
+      "急诊病人已到达，建议放下奶茶立即处理。",
+      "叮～新病人到了",
+      "排队的人越来越多了...",
+      "稳住，我们能赢！",
+      "注意！有急诊！",
+      "呼～今天也是忙碌的一天呢",
+      "💡 及时清理报告可延长病人的等待时间哦",
+      "优先处理急诊病人可以获得生命值哦"
+    ]
+  },
+  "patient": {
+    "names": [
+      "张大爷", "李大妈", "王叔叔", "刘阿姨", "陈医生", "周护士",
+      "小林", "小张", "老王", "阿强", "阿丽", "小李", "老张", "阿明"
+    ]
+  },
+  "report": {
+    "title": "待写报告清单",
+    "empty": "暂无待写报告",
+    "submit": "提交已完成报告",
+    "freezeTip": "一次性提交至少5份报告\n可获得15秒冻结效果"
+  }
+}

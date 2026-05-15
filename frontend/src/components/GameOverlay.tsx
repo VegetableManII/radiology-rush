@@ -1,8 +1,11 @@
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { useGameStore } from '../stores/gameStore';
 import { playBGM, unlockAudio } from '../hooks/useSound';
+import { LanguageSwitcher } from './LanguageSwitcher';
 
 export function GameOverlay() {
+  const { t } = useTranslation();
   const { status, score, time, resetGame, startGame } = useGameStore();
 
   if (status === 'playing') return null;
@@ -43,6 +46,11 @@ export function GameOverlay() {
           textAlign: 'center',
         }}
       >
+        {/* Language Switcher */}
+        <div style={{ position: 'absolute', top: '1rem', right: '1rem' }}>
+          <LanguageSwitcher />
+        </div>
+
         {status === 'idle' && (
           <>
             <motion.div
@@ -54,15 +62,15 @@ export function GameOverlay() {
             </motion.div>
 
             <h1 style={{ fontSize: 'clamp(1.5rem, 5vw, 2rem)', fontWeight: 700, color: '#1f2937', marginBottom: '0.5rem' }}>
-              影像科的日常
+              {t('game.title')}
             </h1>
-            <p style={{ color: '#6b7280', marginBottom: '1.5rem' }}>Radiology Rush</p>
+            <p style={{ color: '#6b7280', marginBottom: '1.5rem' }}>{t('game.subtitle')}</p>
 
             <div style={{ textAlign: 'left', backgroundColor: '#f9fafb', borderRadius: '0.75rem', padding: '1rem', marginBottom: '1.5rem', fontSize: '0.875rem', color: '#4b5563' }}>
-              <p style={{ marginBottom: '0.5rem' }}>🎯 <strong>目标：</strong>尽可能多地处理病人</p>
-              <p style={{ marginBottom: '0.5rem' }}>👆 <strong>操作：</strong>点击病人然后选择检查室</p>
-              <p style={{ marginBottom: '0.5rem' }}>🚨 <strong>注意：</strong>急诊病人尽量优先处理！</p>
-              <p>❤️ <strong>警告：</strong>病人耐心耗尽会扣除生命值</p>
+              <p style={{ marginBottom: '0.5rem' }}>🎯 <strong>{t('game.start.goal')}</strong></p>
+              <p style={{ marginBottom: '0.5rem' }}>👆 <strong>{t('game.start.action')}</strong></p>
+              <p style={{ marginBottom: '0.5rem' }}>🚨 <strong>{t('game.start.attention')}</strong></p>
+              <p>❤️ <strong>{t('game.start.warning')}</strong></p>
             </div>
 
             <motion.button
@@ -82,7 +90,7 @@ export function GameOverlay() {
                 cursor: 'pointer',
               }}
             >
-              开始接诊
+              {t('game.start.startButton')}
             </motion.button>
           </>
         )}
@@ -99,23 +107,23 @@ export function GameOverlay() {
             </motion.div>
 
             <h1 style={{ fontSize: 'clamp(1.5rem, 5vw, 2rem)', fontWeight: 700, color: '#dc2626', marginBottom: '0.5rem' }}>
-              科室崩盘了
+              {t('game.gameover.title')}
             </h1>
-            <p style={{ color: '#6b7280', marginBottom: '1.5rem' }}>今天已经尽力了...</p>
+            <p style={{ color: '#6b7280', marginBottom: '1.5rem' }}>{t('game.gameover.subtitle')}</p>
 
             <div style={{ backgroundColor: '#f9fafb', borderRadius: '0.75rem', padding: '1rem', marginBottom: '1.5rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                <span style={{ color: '#4b5563' }}>最终得分</span>
+                <span style={{ color: '#4b5563' }}>{t('game.gameover.finalScore')}</span>
                 <span style={{ fontSize: '1.5rem', fontWeight: 700, color: '#2563eb' }}>{score}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ color: '#4b5563' }}>坚持时间</span>
+                <span style={{ color: '#4b5563' }}>{t('game.gameover.duration')}</span>
                 <span style={{ fontSize: '1.25rem', fontWeight: 700, color: '#9333ea' }}>{formatTime(time)}</span>
               </div>
             </div>
 
             <div style={{ textAlign: 'left', fontSize: '0.875rem', color: '#6b7280', marginBottom: '1.5rem' }}>
-              <p>💡 提示：记得优先处理急诊病人，保持节奏！</p>
+              <p>💡 {t('game.gameover.tip')}</p>
             </div>
 
             <motion.button
@@ -135,7 +143,7 @@ export function GameOverlay() {
                 cursor: 'pointer',
               }}
             >
-              再来一局
+              {t('game.gameover.restartButton')}
             </motion.button>
           </>
         )}
@@ -144,9 +152,9 @@ export function GameOverlay() {
           <>
             <div style={{ fontSize: 'clamp(3rem, 10vw, 4.5rem)', marginBottom: '1rem' }}>⏸️</div>
             <h1 style={{ fontSize: 'clamp(1.5rem, 5vw, 2rem)', fontWeight: 700, color: '#1f2937', marginBottom: '1.5rem' }}>
-              游戏暂停
+              {t('game.paused.title')}
             </h1>
-            <p style={{ color: '#6b7280', marginBottom: '1.5rem' }}>休息一下，整理思路</p>
+            <p style={{ color: '#6b7280', marginBottom: '1.5rem' }}>{t('game.paused.subtitle')}</p>
           </>
         )}
       </motion.div>

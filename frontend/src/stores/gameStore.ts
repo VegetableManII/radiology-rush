@@ -1,20 +1,9 @@
+import i18n from 'i18next';
 import { create } from 'zustand';
 import type { GameState, Patient, PatientType, Room, RoomType, PendingReport } from '../types/game';
 import { playSFX } from '../hooks/useSound';
 
 export type GamePhase = 'idle' | 'playing' | 'minigame' | 'paused' | 'gameover';
-
-const PATIENT_NAMES = [
-  '张大爷', '李大妈', '王叔叔', '刘阿姨', '陈医生', '周护士',
-  '小林', '小张', '老王', '阿强', '阿丽', '小李', '老张', '阿明'
-];
-
-const ROOM_CONFIGS: { type: RoomType; name: string; acceptedTypes: PatientType[] }[] = [
-  { type: 'dr', name: 'DR拍片室', acceptedTypes: ['xray', 'emergency'] },
-  { type: 'ct', name: 'CT室', acceptedTypes: ['ct', 'emergency'] },
-  { type: 'mri', name: 'MRI核磁室', acceptedTypes: ['mri'] },
-  { type: 'registration', name: '登记台', acceptedTypes: ['xray', 'ct', 'mri', 'emergency'] },
-];
 
 const PATIENT_CONFIGS: { type: PatientType; room: RoomType; baseTime: number; reward: number }[] = [
   { type: 'xray', room: 'dr', baseTime: 3000, reward: 10 },
@@ -28,6 +17,25 @@ let roomIdCounter = 0;
 const generatePatientId = () => `p-${Date.now()}-${patientIdCounter++}`;
 const generateRoomId = () => `r-${Date.now()}-${roomIdCounter++}`;
 
+const getPatientName = () => {
+  const names = i18n.t('patient.names', { returnObjects: true }) as string[];
+  return names[Math.floor(Math.random() * names.length)];
+};
+
+const getRoomName = (type: RoomType) => {
+  return i18n.t(`room.${type}`);
+};
+
+const getAcceptedTypes = (type: RoomType): PatientType[] => {
+  switch (type) {
+    case 'dr': return ['xray', 'emergency'];
+    case 'ct': return ['ct', 'emergency'];
+    case 'mri': return ['mri'];
+    case 'registration': return ['xray', 'ct', 'mri', 'emergency'];
+    default: return [];
+  }
+};
+
 const generatePatient = (difficulty: number): Patient => {
   const rand = Math.random();
   let type: PatientType;
@@ -39,10 +47,9 @@ const generatePatient = (difficulty: number): Patient => {
 
   const config = PATIENT_CONFIGS.find(c => c.type === type)!;
   const patienceReduction = Math.min(0.5, difficulty * 0.05);
-  // 基础耐心 = 15000 - (难度 × 500)
   const basePatience = Math.max(2000, 15000 - (difficulty * 500));
 
-  const name = PATIENT_NAMES[Math.floor(Math.random() * PATIENT_NAMES.length)];
+  const name = getPatientName();
 
   const fullPatience = basePatience;
   const patienceSpeed = 0.3 + Math.random() * 0.9;
@@ -62,15 +69,16 @@ const generatePatient = (difficulty: number): Patient => {
 };
 
 const createRooms = (): Room[] => {
-  return ROOM_CONFIGS.map(cfg => ({
+  const roomTypes: RoomType[] = ['dr', 'ct', 'mri', 'registration'];
+  return roomTypes.map(type => ({
     id: generateRoomId(),
-    type: cfg.type,
-    name: cfg.name,
+    type,
+    name: getRoomName(type),
     isBusy: false,
     currentPatient: null,
     remainingTime: 0,
     queue: [],
-    acceptedTypes: cfg.acceptedTypes,
+    acceptedTypes: getAcceptedTypes(type),
     minigameScore: 0,
   }));
 };
@@ -151,15 +159,15 @@ export const useGameStore = create<GameStore>((set, get) => ({
       set({ status: 'paused', phase: 'paused' });
     }
   },
-  
+
   resumeGame: () => {
     const { currentMinigamePatient } = get();
-    set({ 
+    set({
       status: 'playing',
       phase: currentMinigamePatient ? 'minigame' : 'playing'
     });
   },
-  
+
   endGame: () => {
     set({ status: 'gameover', phase: 'gameover' });
     playSFX('sfx_game_over');
@@ -175,7 +183,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   assignPatientToRoom: (patient, roomId) => {
     const { rooms, patients } = get();
     const room = rooms.find(r => r.id === roomId);
-    
+
     if (!room || room.isBusy) return;
     if (!room.acceptedTypes.includes(patient.type)) return;
 
@@ -231,7 +239,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
       return r;
     });
 
-    // Add pending report for the patient (only if successful)
     const room = rooms.find(r => r.currentPatient?.id === currentMinigamePatient.id);
     const newPendingReport: PendingReport | null = success === 1 ? {
       id: `report-${Date.now()}-${Math.random()}`,
@@ -240,20 +247,17 @@ export const useGameStore = create<GameStore>((set, get) => ({
       completed: false,
     } : null;
 
-    // Emergency count tracking: every 1 emergency = +1 life
     const isEmergency = currentMinigamePatient.type === 'emergency';
     const newEmergencyCount = isEmergency ? emergencyCount + 1 : 0;
     const emergencyHeartsEarned = Math.floor(newEmergencyCount / 1);
     const remainderEmergency = newEmergencyCount % 1;
 
-    // Normal patient count tracking: every 2 normal patients = +1 life
     const newNormalCount = success === 1 && !isEmergency ? normalCount + 1 : normalCount;
     const normalHeartsEarned = Math.floor(newNormalCount / 2);
     const remainderNormal = newNormalCount % 2;
 
     const totalHeartsEarned = emergencyHeartsEarned + normalHeartsEarned;
 
-    // Sound effects: only play if lives will actually increase
     if (totalHeartsEarned > 0 && lives < 10) {
       playSFX('sfx_heart_earn');
     }
@@ -285,7 +289,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const { patients, time, phase } = get();
     if (phase !== 'playing') return;
 
-    // 超过20个病人不再生成
     if (patients.length >= 20) return;
 
     const difficulty = Math.floor(time / 30000);
@@ -311,10 +314,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
     const adjustedDelta = deltaTime * get().gameSpeed;
 
-    // 计算当前难度，每30秒+1难度
     const difficulty = Math.floor(time / 30000);
 
-    // 冻结：剩余秒数 > 0 时激活，freezeSeconds 独立倒计
     const isFreeze = freezeSeconds > 0;
     const freezeMultiplier = isFreeze ? 0.2 : 1;
     const difficultyMultiplier = (1 + difficulty * 0.1) * freezeMultiplier;
@@ -345,7 +346,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
       lives: newLives,
       difficulty,
       freezeSeconds: newFreezeSeconds,
-      // 第一次难度升级时触发气泡
       ...(difficulty > 0 && !difficultyAlertShown ? { patientLeftAlert: true, difficultyAlertShown: true } : {}),
     });
   },
@@ -377,7 +377,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const remainingReports = pendingReports.filter(r => !r.completed);
     const bonusScore = completedCount * 5;
 
-    // 一次性提交满5份触发冻结，每多5份额外+15秒
     let addFreezeSeconds = 0;
     if (completedCount >= 5) {
       addFreezeSeconds = Math.floor(completedCount / 5) * 15;
