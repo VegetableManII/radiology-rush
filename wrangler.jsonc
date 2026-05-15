@@ -1,3 +1,5 @@
 {
-  "main": "frontend/dist/index.html"
+  "name": "radiology-rush",
+  "pages_build_output_dir": "./frontend/dist",
+  "compatibility_date": "2026-04-21"
 }
