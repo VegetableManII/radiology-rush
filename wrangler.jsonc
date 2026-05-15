@@ -5,9 +5,9 @@
   "observability": {
     "enabled": true
   },
-  "pages_build_output_dir": "./fronted/dist/",
+  "pages_build_output_dir": "./dist/",
   "assets": {
-    "directory": "./fronted/dist/assets/"
+    "directory": "./dist/assets/"
   },
   "compatibility_flags": [
     "nodejs_compat"
