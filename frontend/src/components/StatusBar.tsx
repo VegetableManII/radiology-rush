@@ -6,8 +6,7 @@ const BASE_FONT = 'clamp(0.75rem, 2.5vw, 0.875rem)';
 const LG_FONT = 'clamp(1rem, 3vw, 1.25rem)';
 
 export function StatusBar() {
-  const { score, lives, time, combo, status, difficulty } = useGameStore();
-  const prevScore = useRef(score);
+  const { lives, time, combo, status, difficulty } = useGameStore();
   const prevLives = useRef(lives);
 
   const formatTime = (ms: number) => {
@@ -19,10 +18,6 @@ export function StatusBar() {
 
   if (status === 'idle') return null;
 
-  const scoreIncreased = score > prevScore.current;
-  const scoreDecreased = score < prevScore.current;
-
-  if (score !== prevScore.current) prevScore.current = score;
   if (lives !== prevLives.current) prevLives.current = lives;
 
   const maxHearts = 5;
@@ -48,39 +43,24 @@ export function StatusBar() {
       position: 'relative',
       boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)',
     }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(0.25rem, 2vw, 0.75rem)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-          <span style={{ fontSize: BASE_FONT, color: '#4b5563' }}>分数</span>
-          <motion.span
-            key={score}
-            initial={scoreIncreased ? { scale: 1.5 } : scoreDecreased ? { scale: 0.8 } : false}
-            animate={{ scale: 1 }}
-            transition={{ type: 'spring', stiffness: 500, damping: 15 }}
-            style={{ fontSize: LG_FONT, fontWeight: 700, color: '#2563eb', fontVariantNumeric: 'tabular-nums' }}
-          >
-            {score}
-          </motion.span>
-        </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+        <span style={{ fontSize: BASE_FONT, color: '#4b5563' }}>连击</span>
+        <span style={{ fontSize: LG_FONT, fontWeight: 700, color: comboColor }}>
+          x{combo}
+        </span>
+      </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-          <span style={{ fontSize: BASE_FONT, color: '#4b5563' }}>连击</span>
-          <span style={{ fontSize: LG_FONT, fontWeight: 700, color: comboColor }}>
-            x{combo}
-          </span>
-        </div>
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-          <span style={{ fontSize: BASE_FONT, color: '#4b5563' }}>难度</span>
-          <motion.span
-            key={difficulty}
-            initial={{ scale: 2, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ type: 'spring', stiffness: 400, damping: 15 }}
-            style={{ fontSize: LG_FONT, fontWeight: 700, color: '#dc2626', fontVariantNumeric: 'tabular-nums' }}
-          >
-            {difficulty}
-          </motion.span>
-        </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+        <span style={{ fontSize: BASE_FONT, color: '#4b5563' }}>难度</span>
+        <motion.span
+          key={difficulty}
+          initial={{ scale: 2, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ type: 'spring', stiffness: 400, damping: 15 }}
+          style={{ fontSize: LG_FONT, fontWeight: 700, color: '#dc2626', fontVariantNumeric: 'tabular-nums' }}
+        >
+          {difficulty}
+        </motion.span>
       </div>
 
       <div style={{

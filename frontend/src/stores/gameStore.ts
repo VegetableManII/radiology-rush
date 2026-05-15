@@ -45,7 +45,7 @@ const generatePatient = (difficulty: number): Patient => {
   const name = PATIENT_NAMES[Math.floor(Math.random() * PATIENT_NAMES.length)];
 
   const fullPatience = basePatience;
-  const patienceSpeed = 0.5 + Math.random() * 1.0;
+  const patienceSpeed = 0.3 + Math.random() * 0.9;
 
   return {
     id: generatePatientId(),
