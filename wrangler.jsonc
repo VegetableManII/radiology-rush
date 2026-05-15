@@ -5,8 +5,9 @@
   "observability": {
     "enabled": true
   },
+  "pages_build_output_dir": "./fronted/dist",
   "assets": {
-    "directory": "frontend"
+    "directory": "frontend/dist/assets"
   },
   "compatibility_flags": [
     "nodejs_compat"
