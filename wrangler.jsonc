@@ -1,12 +1,3 @@
 {
-  "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "radiology-rush",
-  "compatibility_date": "2026-05-15",
-  "observability": {
-    "enabled": true
-  },
-  "pages_build_output_dir": "./frontend/dist/",
-  "compatibility_flags": [
-    "nodejs_compat"
-  ]
+  "main": "frontend/dist/index.html"
 }
