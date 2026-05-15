@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { playSFX } from '../hooks/useSound';
 
 type MriType = 'edema' | 'hemorrhage' | 'lipoma';
@@ -16,12 +17,6 @@ const QUESTIONS: MriQuestion[] = [
   { t1: 'bright', t2: 'dark', answer: 'lipoma', image: '/assets/mri_game/mri_lipoma.webp' },
 ];
 
-const MriTypeNames: Record<MriType, string> = {
-  edema: '水肿',
-  hemorrhage: '出血',
-  lipoma: '脂肪瘤',
-};
-
 interface MriGameProps {
   onComplete: (success: boolean) => void;
 }
@@ -36,6 +31,7 @@ function shuffleArray<T>(array: T[]): T[] {
 }
 
 export function MriGame({ onComplete }: MriGameProps) {
+  const { t } = useTranslation();
   const [timeLeft, setTimeLeft] = useState(10);
   const [result, setResult] = useState<'success' | 'fail' | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -43,10 +39,18 @@ export function MriGame({ onComplete }: MriGameProps) {
   const [shuffledTypes, setShuffledTypes] = useState<MriType[]>([]);
   const [selectedAnswer, setSelectedAnswer] = useState<MriType | null>(null);
 
+  // 使用 useMemo 避免每次渲染都重新创建对象
+  const mriTypeNames = useMemo<Record<MriType, string>>(() => ({
+    edema: t('minigame.mri.edema'),
+    hemorrhage: t('minigame.mri.hemorrhage'),
+    lipoma: t('minigame.mri.lipoma'),
+  }), [t]);
+
+  // 只在初始化时设置一次题目和选项顺序
   useEffect(() => {
     const randomQuestion = QUESTIONS[Math.floor(Math.random() * QUESTIONS.length)];
     setCurrentQuestion(randomQuestion);
-    setShuffledTypes(shuffleArray([...Object.keys(MriTypeNames)] as MriType[]));
+    setShuffledTypes(shuffleArray(['edema', 'hemorrhage', 'lipoma']));
     setIsLoading(false);
   }, []);
 
@@ -80,7 +84,7 @@ export function MriGame({ onComplete }: MriGameProps) {
   if (isLoading || !currentQuestion) {
     return (
       <div style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)' }}>
-        <span style={{ color: 'white' }}>加载中...</span>
+        <span style={{ color: 'white' }}>{t('common.loading')}</span>
       </div>
     );
   }
@@ -91,7 +95,7 @@ export function MriGame({ onComplete }: MriGameProps) {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
           <h2 style={{ fontSize: 'clamp(1rem, 3vw, 1.125rem)', fontWeight: 700, color: '#1f2937', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <img src="/assets/icons/icon_mri.webp" alt="" style={{ width: 'clamp(1.25rem, 4vw, 1.5rem)', height: 'clamp(1.25rem, 4vw, 1.5rem)' }} />
-            MRI室 - 判断病变类型
+            {t('minigame.mri.title')}
           </h2>
           <div style={{
             padding: '0.25rem 0.75rem',
@@ -110,13 +114,13 @@ export function MriGame({ onComplete }: MriGameProps) {
         */}
         <div style={{ backgroundColor: '#f3f4f6', borderRadius: '0.75rem', padding: '0.75rem', marginBottom: '0.75rem' }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem' }}>
-            <span style={{ fontSize: 'clamp(0.625rem, 2vw, 0.75rem)', color: '#6b7280', fontWeight: 500, flexShrink: 0, paddingTop: '0.125rem' }}>已扫描</span>
+            <span style={{ fontSize: 'clamp(0.625rem, 2vw, 0.75rem)', color: '#6b7280', fontWeight: 500, flexShrink: 0, paddingTop: '0.125rem' }}>{t('minigame.mri.scanned')}</span>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', flex: 1 }}>
               {/* 竖排提示：信号灯 + 病名 */}
               {[
-                { t1: 'bright', t2: 'bright', label: '出血' },
-                { t1: 'dark', t2: 'bright', label: '水肿' },
-                { t1: 'bright', t2: 'dark', label: '脂肪瘤' },
+                { t1: 'bright', t2: 'bright', label: t('minigame.mri.hemorrhage') },
+                { t1: 'dark', t2: 'bright', label: t('minigame.mri.edema') },
+                { t1: 'bright', t2: 'dark', label: t('minigame.mri.lipoma') },
               ].map((item, idx) => (
                 <div key={idx} style={{
                   display: 'flex', alignItems: 'center', gap: '0.375rem',
@@ -150,7 +154,7 @@ export function MriGame({ onComplete }: MriGameProps) {
                         ? { backgroundColor: '#22c55e', boxShadow: '0 0 10px rgba(34,197,94,0.5)' }
                         : { backgroundColor: '#4b5567', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.3)' }),
                     }}>
-                      {val === 'bright' ? '亮' : '暗'}
+                      {val === 'bright' ? t('minigame.mri.bright') : t('minigame.mri.dark')}
                     </div>
                   </div>
                 );
@@ -189,7 +193,7 @@ export function MriGame({ onComplete }: MriGameProps) {
               >
                 <img
                   src={QUESTIONS.find(q => q.answer === type)?.image}
-                  alt={MriTypeNames[type]}
+                  alt={mriTypeNames[type]}
                   style={{ width: '100%', aspectRatio: '1', objectFit: 'cover' }}
                 />
                 <div style={{
@@ -201,7 +205,7 @@ export function MriGame({ onComplete }: MriGameProps) {
                   color: 'white',
                   backgroundColor: '#374151',
                 }}>
-                  {MriTypeNames[type]}
+                  {mriTypeNames[type]}
                 </div>
               </button>
             );
@@ -215,8 +219,8 @@ export function MriGame({ onComplete }: MriGameProps) {
           }}>
             <div style={{ textAlign: 'center', color: 'white' }}>
               <div style={{ fontSize: 'clamp(2.5rem, 8vw, 3rem)', marginBottom: '0.5rem', fontWeight: 700 }}>{result === 'success' ? '✓' : '✗'}</div>
-              <div style={{ fontSize: 'clamp(1rem, 3vw, 1.25rem)', fontWeight: 700 }}>{result === 'success' ? '正确！' : '错误'}</div>
-              <div style={{ fontSize: 'clamp(0.75rem, 2.5vw, 0.875rem)', opacity: 0.9, marginTop: '0.25rem' }}>{MriTypeNames[currentQuestion.answer]}</div>
+              <div style={{ fontSize: 'clamp(1rem, 3vw, 1.25rem)', fontWeight: 700 }}>{result === 'success' ? t('minigame.mri.success') : t('minigame.mri.fail')}</div>
+              <div style={{ fontSize: 'clamp(0.75rem, 2.5vw, 0.875rem)', opacity: 0.9, marginTop: '0.25rem' }}>{mriTypeNames[currentQuestion.answer]}</div>
             </div>
           </div>
         )}

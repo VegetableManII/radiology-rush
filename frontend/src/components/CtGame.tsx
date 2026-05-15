@@ -1,20 +1,16 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { playSFX } from '../hooks/useSound';
 
 const BODY_PARTS = ['brain', 'chest', 'abdomen'] as const;
 type BodyPart = typeof BODY_PARTS[number];
-
-const bodyPartNames: Record<BodyPart, string> = {
-  brain: '脑部',
-  chest: '胸部',
-  abdomen: '腹部',
-};
 
 interface CtGameProps {
   onComplete: (success: boolean) => void;
 }
 
 export function CtGame({ onComplete }: CtGameProps) {
+  const { t } = useTranslation();
   const [timeLeft, setTimeLeft] = useState(7);
   const [result, setResult] = useState<'success' | 'fail' | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -58,7 +54,7 @@ export function CtGame({ onComplete }: CtGameProps) {
   if (isLoading) {
     return (
       <div style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)' }}>
-        <span style={{ color: 'white' }}>加载中...</span>
+        <span style={{ color: 'white' }}>{t('common.loading')}</span>
       </div>
     );
   }
@@ -69,7 +65,7 @@ export function CtGame({ onComplete }: CtGameProps) {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
           <h2 style={{ fontSize: 'clamp(1rem, 3vw, 1.125rem)', fontWeight: 700, color: '#1f2937', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <img src="/assets/icons/icon_ct.webp" alt="" style={{ width: 'clamp(1.25rem, 4vw, 1.5rem)', height: 'clamp(1.25rem, 4vw, 1.5rem)' }} />
-            CT室 - 找出病变位置
+            {t('minigame.ct.title')}
           </h2>
           <div style={{
             padding: '0.25rem 0.75rem',
@@ -84,7 +80,7 @@ export function CtGame({ onComplete }: CtGameProps) {
         </div>
 
         <p style={{ fontSize: 'clamp(0.75rem, 2.5vw, 0.875rem)', color: '#4b5563', marginBottom: '0.75rem', textAlign: 'center' }}>
-          找出 <span style={{ fontWeight: 700, color: '#2563eb' }}>{bodyPartNames[bodyPart]}</span> CT 中有病变的1张
+          {t('minigame.ct.findLesion', { part: t(`minigame.ct.${bodyPart}`) })}
         </p>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem' }}>
@@ -127,7 +123,7 @@ export function CtGame({ onComplete }: CtGameProps) {
           }}>
             <div style={{ textAlign: 'center', color: 'white' }}>
               <div style={{ fontSize: 'clamp(2.5rem, 8vw, 3rem)', marginBottom: '0.5rem', fontWeight: 700 }}>{result === 'success' ? '✓' : '✗'}</div>
-              <div style={{ fontSize: 'clamp(1rem, 3vw, 1.25rem)', fontWeight: 700 }}>{result === 'success' ? '找对了！' : '找错了'}</div>
+              <div style={{ fontSize: 'clamp(1rem, 3vw, 1.25rem)', fontWeight: 700 }}>{result === 'success' ? t('minigame.ct.success') : t('minigame.ct.fail')}</div>
             </div>
           </div>
         )}

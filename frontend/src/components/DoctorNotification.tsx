@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { useGameStore } from '../stores/gameStore';
 import { playSFX } from '../hooks/useSound';
 
@@ -8,7 +9,7 @@ interface Notification {
   message: string;
 }
 
-const DOCTOR_MESSAGES = [
+const DOCTOR_MESSAGES_ZH = [
   '小羊！动作快点！',
   '效率！效率！我强调多少次了！',
   '今天报告还没写完呢！',
@@ -24,14 +25,33 @@ const DOCTOR_MESSAGES = [
   '我等都等急了！',
 ];
 
+const DOCTOR_MESSAGES_EN = [
+  'Xiaoyang! Hurry up!',
+  'Efficiency! How many times do I need to强调!',
+  'Reports aren\'t done yet!',
+  'Stop dawdling!',
+  'Next! Next patient!',
+  'At this speed, we\'ll miss lunch!',
+  'Head nurse is on my case again...',
+  'Handle emergencies first!',
+  'Position the patient better!',
+  'The queue is getting longer...',
+  'Xiaoyang~ Put away your phone!',
+  'Quick quick quick!',
+  'I\'ve been waiting forever!',
+];
+
 const MAX_NOTIFICATIONS = 10;
 
 export function DoctorNotification() {
+  const { i18n } = useTranslation();
   const status = useGameStore((s) => s.status);
   const [notifications, setNotifications] = useState<Notification[]>([]);
 
+  const messages = i18n.language === 'zh' ? DOCTOR_MESSAGES_ZH : DOCTOR_MESSAGES_EN;
+
   const addNotification = useCallback(() => {
-    const message = DOCTOR_MESSAGES[Math.floor(Math.random() * DOCTOR_MESSAGES.length)];
+    const message = messages[Math.floor(Math.random() * messages.length)];
     const newNotification: Notification = {
       id: `doc-${Date.now()}-${Math.random()}`,
       message,
@@ -44,7 +64,7 @@ export function DoctorNotification() {
     });
 
     playSFX('sfx_doctor_notify');
-  }, []);
+  }, [messages]);
 
   useEffect(() => {
     if (status !== 'playing') return;

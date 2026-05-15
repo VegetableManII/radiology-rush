@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { playSFX } from '../hooks/useSound';
 
 const DR_IMAGES = [
@@ -20,6 +21,7 @@ interface DrGameProps {
 }
 
 export function DrGame({ onComplete }: DrGameProps) {
+  const { t } = useTranslation();
   const [timeLeft, setTimeLeft] = useState(5);
   const [result, setResult] = useState<'success' | 'fail' | null>(null);
   const [selectedZone, setSelectedZone] = useState<number | null>(null);
@@ -69,7 +71,7 @@ export function DrGame({ onComplete }: DrGameProps) {
   if (isLoading) {
     return (
       <div style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)' }}>
-        <span style={{ color: 'white' }}>加载中...</span>
+        <span style={{ color: 'white' }}>{t('common.loading')}</span>
       </div>
     );
   }
@@ -80,7 +82,7 @@ export function DrGame({ onComplete }: DrGameProps) {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
           <h2 style={{ fontSize: 'clamp(1rem, 3vw, 1.125rem)', fontWeight: 700, color: '#1f2937', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <img src="/assets/icons/icon_dr.webp" alt="" style={{ width: 'clamp(1.25rem, 4vw, 1.5rem)', height: 'clamp(1.25rem, 4vw, 1.5rem)' }} />
-            DR拍片 - 找出骨折部位
+            {t('minigame.dr.title')}
           </h2>
           <div style={{
             padding: '0.25rem 0.75rem',
@@ -127,14 +129,14 @@ export function DrGame({ onComplete }: DrGameProps) {
             }}>
               <div style={{ textAlign: 'center', color: 'white' }}>
                 <div style={{ fontSize: 'clamp(2.5rem, 8vw, 3rem)', marginBottom: '0.5rem', fontWeight: 700 }}>{result === 'success' ? '✓' : '✗'}</div>
-                <div style={{ fontSize: 'clamp(1rem, 3vw, 1.25rem)', fontWeight: 700 }}>{result === 'success' ? '找对了！' : '找错了'}</div>
+                <div style={{ fontSize: 'clamp(1rem, 3vw, 1.25rem)', fontWeight: 700 }}>{result === 'success' ? t('minigame.dr.success') : t('minigame.dr.fail')}</div>
               </div>
             </div>
           )}
         </div>
 
         <p style={{ textAlign: 'center', fontSize: 'clamp(0.75rem, 2.5vw, 0.875rem)', color: '#6b7280', marginTop: '0.75rem' }}>
-          点击骨骼图上骨折的位置
+          {t('minigame.dr.instruction')}
         </p>
       </div>
     </div>

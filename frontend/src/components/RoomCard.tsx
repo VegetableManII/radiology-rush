@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { useGameStore } from '../stores/gameStore';
 import type { Room } from '../types/game';
 
@@ -16,6 +17,7 @@ const ROOM_IMAGES: Record<string, string> = {
 };
 
 function RoomCard({ room }: { room: Room }) {
+  const { t } = useTranslation();
   const { selectedPatient, assignPatientToRoom, status } = useGameStore();
 
   const canAccept = selectedPatient &&
@@ -64,7 +66,7 @@ function RoomCard({ room }: { room: Room }) {
             fontWeight: 700,
             backgroundColor: room.isBusy ? 'rgba(239,68,68,0.8)' : 'rgba(34,197,94,0.8)',
           }}>
-            {room.isBusy ? '工作中' : '空闲'}
+            {room.isBusy ? t('ui.busy') : t('ui.idle')}
           </div>
         </div>
 
@@ -102,6 +104,7 @@ function RoomCard({ room }: { room: Room }) {
 }
 
 export function RoomList() {
+  const { t } = useTranslation();
   const { rooms, status } = useGameStore();
 
   if (status === 'idle') return null;
@@ -123,7 +126,7 @@ export function RoomList() {
       overflow: 'hidden',
     }}>
       <h2 style={{ fontSize: 'clamp(0.75rem, 2.5vw, 0.875rem)', fontWeight: 700, color: '#374151', display: 'flex', alignItems: 'center', gap: '0.25rem', flexShrink: 0 }}>
-        <span style={{ fontSize: 'clamp(0.875rem, 2.5vw, 1rem)' }}>🏥</span> 检查室
+        <span style={{ fontSize: 'clamp(0.875rem, 2.5vw, 1rem)' }}>🏥</span> {t('ui.examRoom')}
       </h2>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem', flex: 1, minHeight: 0 }}>

@@ -1,8 +1,10 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useGameStore } from '../stores/gameStore';
 
 export function ReportList() {
+  const { t } = useTranslation();
   const { pendingReports, toggleReportComplete, submitReports, status, patientLeftAlert, dismissPatientLeftAlert, difficultyAlertShown, dismissDifficultyAlert } = useGameStore();
   const [isOpen, setIsOpen] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -53,7 +55,7 @@ export function ReportList() {
         <div style={{ position: 'relative', pointerEvents: 'auto' }}>
           <img
             src="/assets/icons/computer_icon.webp"
-            alt="报告"
+            alt={t('report.title')}
             style={{ width: '4rem', height: '4rem' }}
           />
           {incompleteCount > 0 && (
@@ -95,13 +97,13 @@ export function ReportList() {
             style={{ position: 'fixed', bottom: '1rem', left: '1rem', zIndex: 50, width: '20rem', backgroundColor: 'transparent', overflow: 'hidden' }}
           >
             <div style={{ backgroundColor: '#2563eb', color: 'white', padding: '0.75rem 1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderRadius: '1rem 1rem 0 0' }}>
-              <h3 style={{ fontWeight: 700, fontSize: '0.875rem' }}>待写报告清单</h3>
+              <h3 style={{ fontWeight: 700, fontSize: '0.875rem' }}>{t('report.title')}</h3>
             </div>
 
             <div style={{ maxHeight: '20rem', overflowY: 'auto', backgroundColor: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(8px)' }}>
               {pendingReports.length === 0 ? (
                 <div style={{ padding: '1.5rem 1rem', textAlign: 'center', color: '#9ca3af', fontSize: '0.875rem' }}>
-                  暂无待写报告
+                  {t('report.empty')}
                 </div>
               ) : (
                 <ul style={{ borderTop: '1px solid #f3f4f6' }}>
@@ -168,7 +170,7 @@ export function ReportList() {
                     : { backgroundColor: '#e5e7eb', color: '#9ca3af' }),
                 }}
               >
-                提交已完成报告 ({completedCount})
+                {t('report.submit')} ({completedCount})
               </button>
             </div>
           </motion.div>
@@ -194,9 +196,10 @@ export function ReportList() {
           }}
         >
           <div>
-            <p style={{ color: '#92400e', fontWeight: 700, fontSize: '0.75rem', lineHeight: 1.4 }}>
-              一次性提交至少5份报告<br />可获得15秒冻结效果
-            </p>
+            <p
+              style={{ color: '#92400e', fontWeight: 700, fontSize: '0.75rem', lineHeight: 1.4 }}
+              dangerouslySetInnerHTML={{ __html: t('report.freezeTip').replace('\n', '<br />') }}
+            />
           </div>
         </div>
       )}

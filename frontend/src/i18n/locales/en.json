@@ -1,0 +1,110 @@
+{
+  "common": {
+    "loading": "Loading..."
+  },
+  "game": {
+    "title": "Radiology Rush",
+    "subtitle": "A Day in the Radiology Department",
+    "start": {
+      "goal": "Goal: Treat as many patients as possible",
+      "action": "Click patient to select, then click exam room to assign",
+      "attention": "Priority: Try to handle emergency patients first!",
+      "warning": "Warning: Patients leaving will cost health",
+      "startButton": "Start Shift"
+    },
+    "gameover": {
+      "title": "Department Collapsed",
+      "subtitle": "You did your best today...",
+      "finalScore": "Final Score",
+      "duration": "Time Survived",
+      "tip": "Remember to prioritize emergency patients!",
+      "restartButton": "Try Again"
+    },
+    "paused": {
+      "title": "Game Paused",
+      "subtitle": "Take a break, collect your thoughts"
+    }
+  },
+  "ui": {
+    "score": "Score",
+    "combo": "Combo",
+    "difficulty": "Difficulty",
+    "waitingRoom": "Waiting Room",
+    "noPatients": "No patients waiting",
+    "patientCount": "{{count}}/20",
+    "emergency": "ER",
+    "examRoom": "Exam Rooms",
+    "busy": "Busy",
+    "idle": "Idle"
+  },
+  "minigame": {
+    "dr": {
+      "title": "DR X-Ray",
+      "instruction": "Find and click the fracture location!",
+      "success": "Correct!",
+      "fail": "Wrong location!"
+    },
+    "ct": {
+      "title": "CT Scan",
+      "instruction": "Find the lesion location!",
+      "findLesion": "Find the lesion in {{part}} CT scan",
+      "brain": "Brain",
+      "chest": "Chest",
+      "abdomen": "Abdomen",
+      "success": "Correct!",
+      "fail": "Wrong location!"
+    },
+    "mri": {
+      "title": "MRI",
+      "instruction": "Identify the lesion type!",
+      "scanned": "Scanned",
+      "bright": "Bright",
+      "dark": "Dark",
+      "edema": "Edema",
+      "hemorrhage": "Hemorrhage",
+      "lipoma": "Lipoma",
+      "success": "Correct!",
+      "fail": "Wrong!"
+    }
+  },
+  "notification": {
+    "patientLeaved": "A patient left due to long wait!",
+    "emergencyArrived": "Emergency patient arrived!",
+    "combo": "Combo x{{count}}!",
+    "bulletTime": "Bullet Time!"
+  },
+  "room": {
+    "dr": "DR X-Ray",
+    "ct": "CT Scan",
+    "mri": "MRI",
+    "registration": "Registration"
+  },
+  "message": {
+    "emergency": "🚨 Emergency patient needs attention!",
+    "messages": [
+      "The radiology dept is overwhelmed today.",
+      "CT: I can't spin any faster.",
+      "Patient: Nurse, can I go faster?",
+      "Emergency arrived. Put down that boba and handle it!",
+      "Ding~ New patient arrived",
+      "The queue is getting longer...",
+      "Stay calm, we can do this!",
+      "Warning! Emergency patient!",
+      "Whew~ Another busy day",
+      "💡 Clearing reports in time extends patient patience",
+      "Handling emergency patients first earns you health!"
+    ]
+  },
+  "patient": {
+    "names": [
+      "Mr. Zhang", "Ms. Li", "Uncle Wang", "Aunt Liu", "Dr. Chen", "Nurse Zhou",
+      "Xiao Lin", "Xiao Zhang", "Old Wang", "Ah Qiang", "Ah Li", "Xiao Li", "Old Zhang", "Ah Ming"
+    ]
+  },
+  "report": {
+    "title": "Pending Reports",
+    "empty": "No pending reports",
+    "submit": "Submit Completed",
+    "freezeTip": "Submit at least 5 reports at once\nto get 15 seconds freeze!"
+  }
+}

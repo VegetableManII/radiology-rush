@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { useGameStore } from '../stores/gameStore';
 import type { Patient } from '../types/game';
 
@@ -29,6 +30,7 @@ const getPatienceColor = (percent: number) => {
 };
 
 export function PatientQueue() {
+  const { t } = useTranslation();
   const { patients, selectedPatient, selectPatient, status } = useGameStore();
 
   if (status === 'idle') return null;
@@ -52,7 +54,7 @@ export function PatientQueue() {
     }}>
       <div style={{ flexShrink: 0, padding: 'clamp(0.5rem, 2vw, 0.75rem) clamp(0.75rem, 2vw, 1rem)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.2)' }}>
         <h2 style={{ fontSize: 'clamp(0.75rem, 2.5vw, 0.875rem)', fontWeight: 700, color: '#374151', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-          <span style={{ fontSize: 'clamp(0.875rem, 2.5vw, 1rem)' }}>📋</span> 候诊区
+          <span style={{ fontSize: 'clamp(0.875rem, 2.5vw, 1rem)' }}>📋</span> {t('ui.waitingRoom')}
           <span style={{ fontSize: 'clamp(0.625rem, 2vw, 0.75rem)', fontWeight: 400, color: '#9ca3af' }}>({patients.length}/20)</span>
         </h2>
       </div>
@@ -60,7 +62,7 @@ export function PatientQueue() {
       <div style={{ flex: 1, minHeight: 0, padding: '0.5rem', overflowY: 'auto' }}>
         {patients.length === 0 ? (
           <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9ca3af', fontSize: 'clamp(0.625rem, 2vw, 0.75rem)' }}>
-            暂无候诊病人
+            {t('ui.noPatients')}
           </div>
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.5rem' }}>
@@ -101,7 +103,7 @@ export function PatientQueue() {
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.25rem' }}>
                       <span style={{ fontSize: 'clamp(0.75rem, 2.5vw, 0.875rem)', fontWeight: 500, color: '#374151', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{patient.name}</span>
                       {patient.type === 'emergency' && (
-                        <span style={{ flexShrink: 0, fontSize: 'clamp(0.625rem, 2vw, 0.75rem)', fontWeight: 700, color: '#dc2626', backgroundColor: '#fee2e2', padding: '0 0.5rem', borderRadius: '0.25rem' }}>急</span>
+                        <span style={{ flexShrink: 0, fontSize: 'clamp(0.625rem, 2vw, 0.75rem)', fontWeight: 700, color: '#dc2626', backgroundColor: '#fee2e2', padding: '0 0.5rem', borderRadius: '0.25rem' }}>{t('ui.emergency')}</span>
                       )}
                     </div>
                     <div style={{ backgroundColor: 'rgba(209,213,219,0.6)', borderRadius: '9999px', height: 'clamp(4px, 1.5vw, 6px)', overflow: 'hidden' }}>
