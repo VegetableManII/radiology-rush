@@ -7,7 +7,7 @@
   },
   "pages_build_output_dir": "./fronted/dist",
   "assets": {
-    "directory": "frontend/dist/assets"
+    "directory": "./fronted/dist/assets"
   },
   "compatibility_flags": [
     "nodejs_compat"
